@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+data/hf_cache/
+data/outputs/
