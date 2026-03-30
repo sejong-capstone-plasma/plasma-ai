@@ -1,5 +1,3 @@
-# 제목 없음
-
 # Plasma AI
 
 Plasma AI는 반도체 플라즈마 공정 분석을 위한 AI 서버 프로젝트입니다. FastAPI 기반 애플리케이션과 vLLM 기반 로컬 LLM 서버를 Docker 환경에서 함께 실행할 수 있도록 구성했습니다.
