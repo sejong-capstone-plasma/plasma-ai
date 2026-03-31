@@ -17,6 +17,12 @@ ENV_FILE_MAP = {
 
 SELECTED_ENV_FILE = ENV_FILE_MAP.get(CURRENT_APP_ENV, BASE_DIR / ".env.local")
 
+DEFAULT_LLM_BASE_URL = (
+    "http://ai-vllm:8000/v1"
+    if CURRENT_APP_ENV == "prod"
+    else "http://host.docker.internal:11434/v1"
+)
+
 
 class Settings(BaseSettings):
     app_name: str = Field(default="plasma-ai", alias="APP_NAME")
@@ -38,11 +44,6 @@ class Settings(BaseSettings):
     output_dir: Path = Field(default=BASE_DIR / "data" / "outputs", alias="OUTPUT_DIR")
 
     llm_provider: Literal["ollama", "vllm"] = Field(default="ollama", alias="LLM_PROVIDER")
-    DEFAULT_LLM_BASE_URL = (
-        "http://ai-vllm:8000/v1"
-        if CURRENT_APP_ENV == "prod"
-        else "http://host.docker.internal:11434/v1"
-    )
     llm_base_url: str = Field(default=DEFAULT_LLM_BASE_URL, alias="LLM_BASE_URL")
     llm_api_key: str = Field(default="ollama", alias="LLM_API_KEY")
     llm_model: str = Field(default="qwen2.5:7b", alias="LLM_MODEL")

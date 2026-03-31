@@ -1,7 +1,7 @@
 services:
   ai-app:
     build:
-      context: .
+      context: ..
       dockerfile: docker/app/Dockerfile
     container_name: ai-app
     restart: unless-stopped
