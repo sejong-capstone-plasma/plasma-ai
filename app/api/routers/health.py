@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from app.llm.client import get_llm_client, get_llm_model_name
 
+from app.core.config import settings
+
 router = APIRouter()
 
 
@@ -8,7 +10,12 @@ router = APIRouter()
 def health_check():
     return {
         "status": "ok",
-        "service": "ai-app"
+        "app_name": settings.APP_NAME,
+        "app_version": settings.APP_VERSION,
+        "app_env": settings.APP_ENV,
+        "llm_provider": settings.LLM_PROVIDER,
+        "llm_model": settings.LLM_MODEL,
+        "llm_base_url": settings.LLM_BASE_URL,
     }
 
 

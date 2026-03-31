@@ -1,0 +1,12 @@
+services:
+  ai-app:
+    ports:
+      - "8001:8000"
+    environment:
+      APP_ENV: local
+    env_file:
+      - .env.local
+    volumes:
+      - ./app:/workspace/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

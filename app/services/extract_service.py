@@ -1,9 +1,22 @@
 from app.core.enums import GoalType, ProcessType, TaskType, ValidationStatus
+from app.llm.client import LLMClient
 from app.schemas.common import GoalSpec, ValueWithUnit
 from app.schemas.extract import ExtractParametersRequest, ExtractParametersResponse
 
 
 class ExtractService:
+    def __init__(self) -> None:
+        self.llm_client = LLMClient()
+        self.prompt_file = "app/llm/prompts/extract_parameters.json"
+
+    async def extract_parameters(self, text: str) -> tuple[str, dict]:
+        raw_text = await self.llm_client.chat_from_file(
+            prompt_file=self.prompt_file,
+            user_prompt=text,
+        )
+        parsed = self.llm_client.extract_json(raw_text)
+        return raw_text, parsed
+
     def execute(self, request: ExtractParametersRequest) -> ExtractParametersResponse:
         _normalized_text = request.user_input.strip()
 
