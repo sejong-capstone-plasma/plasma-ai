@@ -2,5 +2,7 @@ __pycache__/
 *.pyc
 .venv/
 .env
+.env.local
+.env.prod
 data/hf_cache/
 data/outputs/

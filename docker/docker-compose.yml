@@ -1,36 +1,7 @@
 services:
   ai-app:
     build:
-      context: .
+      context: ..
       dockerfile: docker/app/Dockerfile
     container_name: ai-app
-    ports:
-      - "8001:8001"
-    environment:
-      LLM_BASE_URL: ${LLM_BASE_URL}
-      LLM_API_KEY: ${LLM_API_KEY}
-      LLM_MODEL_PATH: ${LLM_MODEL_PATH}
-    depends_on:
-      - ai-vllm
-    restart: unless-stopped
-
-  ai-vllm:
-    build:
-      context: .
-      dockerfile: docker/vllm/Dockerfile
-    container_name: ai-vllm
-    ports:
-      - "8000:8000"
-    environment:
-      VLLM_API_KEY: ${LLM_API_KEY}
-      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE}
-      TRANSFORMERS_OFFLINE: ${TRANSFORMERS_OFFLINE}
-    volumes:
-      - /data/models/Qwen2.5-1.5B-Instruct:/models/Qwen2.5-1.5B-Instruct:ro
-    command: >
-      --model ${LLM_MODEL_PATH}
-      --host 0.0.0.0
-      --port 8000
-      --api-key ${LLM_API_KEY}
-    ipc: host
     restart: unless-stopped
