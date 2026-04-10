@@ -1,29 +1,25 @@
 from enum import Enum
 
+class ValidationStatus(str, Enum):
+    VALID = "VALID"
+    UNSUPPORTED = "UNSUPPORTED"
+    INVALID_FIELD = "INVALID_FIELD"
 
 class TaskType(str, Enum):
     PREDICTION = "PREDICTION"
     OPTIMIZATION = "OPTIMIZATION"
     UNSUPPORTED = "UNSUPPORTED"
 
-
 class ProcessType(str, Enum):
     ETCH = "ETCH"
     UNKNOWN = "UNKNOWN"
 
+class FieldStatus(str, Enum):
+    VALID = "VALID"
+    AMBIGUOUS = "AMBIGUOUS"
+    OUT_OF_RANGE = "OUT_OF_RANGE"
+    MISSING = "MISSING"
 
-class ValidationStatus(str, Enum):
-    COMPLETE = "COMPLETE"
-    INCOMPLETE = "INCOMPLETE"
-    FAILED = "FAILED"
-
-
-class GoalType(str, Enum):
-    EXACT = "exact"
-    """ 
-    RANGE = "range"
-    MIN = "min"
-    MAX = "max"
-    OPTIMIZE_HIGH = "optimize_high"
-    OPTIMIZE_LOW = "optimize_low" 
-    """
+class BaselineSource(str, Enum):
+    USER_PROVIDED = "USER_PROVIDED"
+    PREDICTED = "PREDICTED"

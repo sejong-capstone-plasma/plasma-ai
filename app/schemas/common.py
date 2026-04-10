@@ -1,30 +1,33 @@
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
-from app.core.enums import GoalType
+from app.core.enums import FieldStatus
 
 
 class ValueWithUnit(BaseModel):
     value: float = Field(..., description="Numeric value")
     unit: str = Field(..., description="Unit string")
 
-class GoalSpec(BaseModel):
-    goal_type: GoalType = Field(..., description="Goal type")
-    target_value: Optional[float] = Field(None, description="Target value for exact/min/max")
-    unit: str = Field(..., description="Unit string")
-    #min_value: Optional[float] = Field(None, description="Minimum value for range")
-    #max_value: Optional[float] = Field(None, description="Maximum value for range")
-
+class ValidatedValueWithUnit(BaseModel):
+    value: float | None = Field(default=None, description="Numeric value")
+    unit: str | None = Field(default=None, description="Unit string")
+    status: FieldStatus = Field(..., description="Field validation status")
+    
 class ProcessParams(BaseModel):
-    pressure_mtorr: ValueWithUnit
-    source_power_w: ValueWithUnit
-    bias_power_w: ValueWithUnit
+    pressure: ValueWithUnit
+    source_power: ValueWithUnit
+    bias_power: ValueWithUnit
 
-class ResultParams(BaseModel):
-    ion_density_cm3: ValueWithUnit
-    ion_temp_ev: ValueWithUnit
+class ValidatedProcessParams(BaseModel):
+    pressure: ValidatedValueWithUnit
+    source_power: ValidatedValueWithUnit
+    bias_power: ValidatedValueWithUnit
+    
+class ImprovementEvaluation(BaseModel):
+    increase_value: ValueWithUnit
+    increase_percent: ValueWithUnit
 
-class TargetSpecs(BaseModel):
-    ion_density_cm3: GoalSpec
-    ion_temp_ev: GoalSpec
+class EtchRateOutput(BaseModel):
+    etch_rate: ValueWithUnit
+
+class ValidatedEtchRateOutput(BaseModel):
+    etch_rate: ValidatedValueWithUnit
