@@ -19,7 +19,3 @@ class FieldStatus(str, Enum):
     AMBIGUOUS = "AMBIGUOUS"
     OUT_OF_RANGE = "OUT_OF_RANGE"
     MISSING = "MISSING"
-
-class BaselineSource(str, Enum):
-    USER_PROVIDED = "USER_PROVIDED"
-    PREDICTED = "PREDICTED"

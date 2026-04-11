@@ -1,15 +1,15 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.core.enums import ProcessType, TaskType, ValidationStatus
-from app.schemas.common import ValidatedEtchRateOutput, ValidatedProcessParams
+from app.schemas.common import CommonBaseModel, CurrentOutputs, ValidatedProcessParams
 
 
-class ExtractParametersRequest(BaseModel):
+class ExtractParametersRequest(CommonBaseModel):
     request_id: str = Field(..., description="Request identifier")
     user_input: str = Field(..., description="Natural language process analysis request")
 
 
-class ExtractParametersResponse(BaseModel):
+class ExtractParametersResponse(CommonBaseModel):
     request_id: str = Field(..., description="Request identifier")
     validation_status: ValidationStatus = Field(..., description="Overall validation status")
     process_type: ProcessType = Field(..., description="Detected process type")
@@ -18,7 +18,7 @@ class ExtractParametersResponse(BaseModel):
         ...,
         description="Extracted and validated process parameters"
     )
-    current_outputs: ValidatedEtchRateOutput | None = Field(
+    current_outputs: CurrentOutputs | None = Field(
         default=None,
         description="Optional current output values extracted from user input"
     )
