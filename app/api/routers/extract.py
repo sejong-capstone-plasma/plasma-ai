@@ -8,5 +8,5 @@ extract_service = ExtractService()
 
 
 @router.post("/extract-parameters", response_model=ExtractParametersResponse)
-def extract_parameters(request: ExtractParametersRequest) -> ExtractParametersResponse:
-    return extract_service.execute(request)
+async def extract_parameters(request: ExtractParametersRequest) -> ExtractParametersResponse:
+    return await extract_service.execute(request)
