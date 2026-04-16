@@ -10,7 +10,7 @@ from app.schemas.common import (
     ValueWithUnit,
 )
 from app.schemas.extract import ExtractParametersResponse
-
+from app.core.exceptions import ModelInferenceException
 
 class ExtractionValidator:
     PRESSURE_MIN_MTORR = 0.0
@@ -24,11 +24,33 @@ class ExtractionValidator:
         request_id: str,
         llm_output: dict[str, Any],
     ) -> ExtractParametersResponse:
+        if not isinstance(llm_output, dict):
+            raise ModelInferenceException(
+                message="LLM 출력 형식이 올바르지 않습니다.",
+                details={
+                    "reason": "llm_output_must_be_object",
+                    "actual_type": type(llm_output).__name__,
+                },
+            )
+
+
         task_type = self._parse_task_type(llm_output.get("task_type"))
         process_type = self._parse_process_type(llm_output.get("process_type"))
 
         process_params_raw = llm_output.get("process_params") or {}
         current_outputs_raw = llm_output.get("current_outputs")
+
+        if process_params_raw is not None and not isinstance(process_params_raw, dict):
+            raise ModelInferenceException(
+                message="LLM 출력의 process_params 형식이 올바르지 않습니다.",
+                details={"reason": "process_params_must_be_object"},
+            )
+
+        if current_outputs_raw is not None and not isinstance(current_outputs_raw, dict):
+            raise ModelInferenceException(
+                message="LLM 출력의 current_outputs 형식이 올바르지 않습니다.",
+                details={"reason": "current_outputs_must_be_object"},
+            )
 
         process_params = ValidatedProcessParams(
             pressure=self._parse_process_field(process_params_raw.get("pressure")),
