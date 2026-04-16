@@ -48,10 +48,7 @@ class ExtractService:
         )
 
         # 4) LLM 응답 JSON 파싱
-        try:
-            llm_output = self.llm_client.extract_json(llm_raw_text)
-        except Exception as e:
-            raise ValueError(f"LLM 응답 JSON 파싱 실패: {e}") from e
+        llm_output = self.llm_client.extract_json(llm_raw_text)
 
         # 5) 검증 / 정규화 + 최종 응답 생성
         return self.extraction_validator.validate_and_normalize(
