@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.schemas.common import ProcessParams, ResultParams
+from app.schemas.common import ProcessParams
 
 
 class PredictRequest(BaseModel):
@@ -10,4 +10,4 @@ class PredictRequest(BaseModel):
 
 class PredictResponse(BaseModel):
     request_id: str
-    prediction_result: ResultParams
+    prediction_result: str

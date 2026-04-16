@@ -32,21 +32,21 @@ class AnalysisOrchestrator:
         self.optimize_service = OptimizeService()
         self.explanation_service = ExplanationService()
 
-    def run_extract_pipeline(
+    async def run_extract_pipeline(
         self,
         request: ExtractParametersRequest,
     ) -> ExtractPipelineResponse:
-        extract_response: ExtractParametersResponse = self.extract_service.execute(request)
+        extract_response: ExtractParametersResponse = await self.extract_service.execute(request)
 
         return ExtractPipelineResponse(
             extract=extract_response,
         )
 
-    def run_prediction_pipeline(
+    async def run_prediction_pipeline(
         self,
         request: PredictRequest,
     ) -> PredictionPipelineResponse:
-        prediction_response: PredictResponse = self.predict_service.execute(request)
+        prediction_response: PredictResponse = await self.predict_service.execute(request)
 
         explanation_request = PredictionExplanationRequest(
             request_id=request.request_id,
@@ -54,14 +54,14 @@ class AnalysisOrchestrator:
             process_params=request.process_params,
             result=prediction_response.prediction_result,
         )
-        explanation_response = self.explanation_service.execute(explanation_request)
+        explanation_response = await self.explanation_service.execute(explanation_request)
 
         return PredictionPipelineResponse(
             prediction=prediction_response,
             explanation=explanation_response,
         )
 
-    def run_optimization_pipeline(
+    async def run_optimization_pipeline(
         self,
         request: OptimizeRequest,
     ) -> OptimizationPipelineResponse:
@@ -70,10 +70,10 @@ class AnalysisOrchestrator:
             request_id=request.request_id,
             process_params=request.process_params,
         )
-        current_prediction: PredictResponse = self.predict_service.execute(prediction_request)
+        current_prediction: PredictResponse = await self.predict_service.execute(prediction_request)
 
         # 2) 그 다음 최적화 수행
-        optimization_response: OptimizeResponse = self.optimize_service.execute(request)
+        optimization_response: OptimizeResponse = await self.optimize_service.execute(request)
 
         # 3) 최적화 결과 설명 생성
         explanation_request = OptimizationExplanationRequest(
@@ -83,7 +83,7 @@ class AnalysisOrchestrator:
             target_specs=request.target_specs,
             result=optimization_response.optimization_candidates,
         )
-        explanation_response = self.explanation_service.execute(explanation_request)
+        explanation_response = await self.explanation_service.execute(explanation_request)
 
         return OptimizationPipelineResponse(
             current_prediction=current_prediction,

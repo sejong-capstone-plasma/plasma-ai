@@ -15,15 +15,15 @@ analysis_orchestrator = AnalysisOrchestrator()
 
 
 @router.post("/extract", response_model=ExtractPipelineResponse)
-def run_extract(request: ExtractParametersRequest) -> ExtractPipelineResponse:
-    return analysis_orchestrator.run_extract_pipeline(request)
+async def run_extract(request: ExtractParametersRequest) -> ExtractPipelineResponse:
+    return await analysis_orchestrator.run_extract_pipeline(request)
 
 
 @router.post("/predict", response_model=PredictionPipelineResponse)
-def run_predict(request: PredictRequest) -> PredictionPipelineResponse:
-    return analysis_orchestrator.run_prediction_pipeline(request)
+async def run_predict(request: PredictRequest) -> PredictionPipelineResponse:
+    return await analysis_orchestrator.run_prediction_pipeline(request)
 
 
 @router.post("/optimize", response_model=OptimizationPipelineResponse)
-def run_optimize(request: OptimizeRequest) -> OptimizationPipelineResponse:
-    return analysis_orchestrator.run_optimization_pipeline(request)
+async def run_optimize(request: OptimizeRequest) -> OptimizationPipelineResponse:
+    return await analysis_orchestrator.run_optimization_pipeline(request)

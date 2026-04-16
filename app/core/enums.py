@@ -1,29 +1,32 @@
 from enum import Enum
 
+class ValidationStatus(str, Enum):
+    VALID = "VALID"
+    UNSUPPORTED = "UNSUPPORTED"
+    INVALID_FIELD = "INVALID_FIELD"
 
 class TaskType(str, Enum):
     PREDICTION = "PREDICTION"
     OPTIMIZATION = "OPTIMIZATION"
     UNSUPPORTED = "UNSUPPORTED"
 
-
 class ProcessType(str, Enum):
     ETCH = "ETCH"
     UNKNOWN = "UNKNOWN"
 
+class FieldStatus(str, Enum):
+    VALID = "VALID"
+    AMBIGUOUS = "AMBIGUOUS"
+    OUT_OF_RANGE = "OUT_OF_RANGE"
+    MISSING = "MISSING"
 
-class ValidationStatus(str, Enum):
-    COMPLETE = "COMPLETE"
-    INCOMPLETE = "INCOMPLETE"
-    FAILED = "FAILED"
-
-
-class GoalType(str, Enum):
-    EXACT = "exact"
-    """ 
-    RANGE = "range"
-    MIN = "min"
-    MAX = "max"
-    OPTIMIZE_HIGH = "optimize_high"
-    OPTIMIZE_LOW = "optimize_low" 
-    """
+class ErrorCode(str, Enum):
+    REQUEST_VALIDATION_ERROR = "REQUEST_VALIDATION_ERROR"
+    INVALID_INPUT = "INVALID_INPUT"
+    MISSING_REQUIRED_FIELD = "MISSING_REQUIRED_FIELD"
+    UNSUPPORTED_TASK = "UNSUPPORTED_TASK"
+    AMBIGUOUS_REQUEST = "AMBIGUOUS_REQUEST"
+    MODEL_NOT_READY = "MODEL_NOT_READY"
+    MODEL_INFERENCE_FAILED = "MODEL_INFERENCE_FAILED"
+    OPTIMIZATION_FAILED = "OPTIMIZATION_FAILED"
+    INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR"
