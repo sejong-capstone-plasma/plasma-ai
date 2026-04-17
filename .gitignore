@@ -4,5 +4,5 @@ __pycache__/
 .env
 .env.local
 .env.prod
-data/hf_cache/
-data/outputs/
+data
+.idea/

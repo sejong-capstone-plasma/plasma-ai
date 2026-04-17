@@ -1,18 +1,11 @@
 REQUIRED_PROCESS_PARAMS = [
-    "pressure_mtorr",
-    "source_power_w",
-    "bias_power_w",
+    "pressure",
+    "source_power",
+    "bias_power",
 ]
 
-SUPPORTED_PROCESS_PARAMS = [
-    "pressure_mtorr",
-    "source_power_w",
-    "bias_power_w",
-]
-
-SUPPORTED_TARGET_SPECS = [
-    "ion_density_cm3",
-    "ion_temp_ev",
+CURRENT_OUTPUTS = [
+    "ETCH_RATE",
 ]
 
 DEFAULT_TOP_K_CANDIDATES = 3

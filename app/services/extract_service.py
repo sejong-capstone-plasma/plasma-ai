@@ -1,46 +1,57 @@
-from app.core.enums import GoalType, ProcessType, TaskType, ValidationStatus
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from app.domain.extraction_validator import ExtractionValidator
+from app.domain.input_preprocessor import InputPreprocessor
 from app.llm.client import LLMClient
-from app.schemas.common import GoalSpec, ValueWithUnit
 from app.schemas.extract import ExtractParametersRequest, ExtractParametersResponse
 
 
 class ExtractService:
-    def __init__(self) -> None:
-        self.llm_client = LLMClient()
-        self.prompt_file = "app/llm/prompts/extract_parameters.json"
+    def __init__(
+        self,
+        llm_client: LLMClient | None = None,
+        input_preprocessor: InputPreprocessor | None = None,
+        extraction_validator: ExtractionValidator | None = None,
+        prompt_file: str | None = None,
+    ) -> None:
+        self.llm_client = llm_client or LLMClient()
+        self.input_preprocessor = input_preprocessor or InputPreprocessor()
+        self.extraction_validator = extraction_validator or ExtractionValidator()
 
-    async def extract_parameters(self, text: str) -> tuple[str, dict]:
-        raw_text = await self.llm_client.chat_from_file(
-            prompt_file=self.prompt_file,
-            user_prompt=text,
+        self.prompt_file = prompt_file or str(
+            Path(__file__).resolve().parents[1] / "llm" / "prompts" / "extract_system.txt"
         )
-        parsed = self.llm_client.extract_json(raw_text)
-        return raw_text, parsed
 
-    def execute(self, request: ExtractParametersRequest) -> ExtractParametersResponse:
-        _normalized_text = request.user_input.strip()
+    async def execute(
+        self,
+        request: ExtractParametersRequest,
+    ) -> ExtractParametersResponse:
+        # 1) 입력 전처리
+        cleaned_input = self.input_preprocessor.clean(request.user_input)
 
-        return ExtractParametersResponse(
+        # 2) LLM user prompt 구성
+        llm_user_prompt = json.dumps(
+            {
+                "request_id": request.request_id,
+                "user_input": cleaned_input,
+            },
+            ensure_ascii=False,
+        )
+
+        # 3) LLM 호출
+        llm_raw_text = await self.llm_client.chat_from_file(
+            prompt_file=self.prompt_file,
+            user_prompt=llm_user_prompt,
+        )
+
+        # 4) LLM 응답 JSON 파싱
+        llm_output = self.llm_client.extract_json(llm_raw_text)
+
+        # 5) 검증 / 정규화 + 최종 응답 생성
+        return self.extraction_validator.validate_and_normalize(
             request_id=request.request_id,
-            task_type=TaskType.OPTIMIZATION,
-            process_type=ProcessType.ETCH,
-            process_params={
-                "pressure_mtorr": ValueWithUnit(value=20, unit="mTorr"),
-                "source_power_w": ValueWithUnit(value=500, unit="W"),
-                "bias_power_w": ValueWithUnit(value=200, unit="W"),
-            },
-            target_specs={
-                "ion_density_cm3": GoalSpec(
-                    goal_type=GoalType.EXACT,
-                    target_value=1.0e11,
-                    unit="cm3",
-                ),
-                "ion_temp_ev": GoalSpec(
-                    goal_type=GoalType.EXACT,
-                    target_value=4.0,
-                    unit="eV",
-                ),
-            },
-            validation_status=ValidationStatus.COMPLETE,
-            missing_fields=[],
+            llm_output=llm_output,
         )

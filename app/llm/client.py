@@ -6,7 +6,7 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from app.core.config import settings
-
+from app.core.exceptions import ModelInferenceException, ModelNotReadyException
 
 class LLMClient:
     def __init__(self) -> None:
@@ -31,20 +31,41 @@ class LLMClient:
                 ],
             )
         except Exception as e:
-            raise RuntimeError(f"LLM 호출 실패: {e}") from e
+            raise ModelInferenceException(
+                message="LLM 호출에 실패했습니다.",
+                details={"reason": str(e)},
+            ) from e
 
         if not response.choices:
-            raise ValueError("LLM 응답에 choices가 없습니다.")
+            raise ModelInferenceException(
+                message="LLM 응답에 choices가 없습니다.",
+                details={},
+            )
 
         content = response.choices[0].message.content
         if not content:
-            raise ValueError("LLM 응답 content가 비어 있습니다.")
+            raise ModelInferenceException(
+                message="LLM 응답 content가 비어 있습니다.",
+                details={},
+            )
 
         return content
 
     async def chat_from_file(self, prompt_file: str, user_prompt: str) -> str:
-        prompt_path = Path(prompt_file).resolve()
-        system_prompt = prompt_path.read_text(encoding="utf-8")
+        try:
+            prompt_path = Path(prompt_file).resolve()
+            system_prompt = prompt_path.read_text(encoding="utf-8")
+        except FileNotFoundError as e:
+            raise ModelNotReadyException(
+                message="프롬프트 파일을 찾을 수 없습니다.",
+                details={"prompt_file": prompt_file},
+            ) from e
+        except Exception as e:
+            raise ModelNotReadyException(
+                message="프롬프트 파일을 읽는 데 실패했습니다.",
+                details={"prompt_file": prompt_file, "reason": str(e)},
+            ) from e
+
         return await self.chat(system_prompt=system_prompt, user_prompt=user_prompt)
 
     @staticmethod
@@ -83,4 +104,7 @@ class LLMClient:
                             break
             start = text.find("{", start + 1)
 
-        raise ValueError("LLM 응답에서 JSON 객체를 찾을 수 없습니다.")
+        raise ModelInferenceException(
+            message="LLM 응답에서 JSON 객체를 찾을 수 없습니다.",
+            details={"raw_text_preview": text[:300]},
+        )
