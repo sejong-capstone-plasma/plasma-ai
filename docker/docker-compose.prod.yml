@@ -1,5 +1,8 @@
 services:
   ai-app:
+    build:
+      context: ..
+      dockerfile: docker/app/Dockerfile
     ports:
       - "8001:8000"
     environment:
@@ -18,19 +21,28 @@ services:
     env_file:
       - ../.env.prod
     volumes:
-      - /data/models:/models:ro
-    command: >
-      /bin/sh -c "vllm serve $$LLM_MODEL_PATH
-      --host 0.0.0.0
-      --port 8000
-      --api-key $$LLM_API_KEY
-      --served-model-name $$LLM_MODEL"
+      - ../data/models:/models:ro
+    command:
+      - --model
+      - ${LLM_MODEL_PATH}
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --served-model-name
+      - ${LLM_MODEL}
+      - --max-model-len
+      - "4096"
+      - --max-num-seqs
+      - "4"
+      - --gpu-memory-utilization
+      - "0.6"
     ipc: host
     gpus: all
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/models')\""]
-      interval: 20s
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/models || exit 1"]
+      interval: 30s
       timeout: 10s
       retries: 10
-      start_period: 60s
+      start_period: 120s
     restart: unless-stopped
