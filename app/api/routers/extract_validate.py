@@ -7,6 +7,6 @@ router = APIRouter()
 service = ExtractValidateService()
 
 
-@router.post("/ai/extract-validate", response_model=ExtractParametersResponse)
+@router.post("/extract-validate", response_model=ExtractParametersResponse)
 async def validate_extract(request: ExtractValidateRequest) -> ExtractParametersResponse:
     return service.execute(request)
