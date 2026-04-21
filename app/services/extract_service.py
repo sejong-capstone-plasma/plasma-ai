@@ -5,6 +5,7 @@ from pathlib import Path
 
 from app.domain.extraction_validator import ExtractionValidator
 from app.domain.input_preprocessor import InputPreprocessor
+from app.domain.llm_extraction_parser import LLMExtractionParser
 from app.llm.client import LLMClient
 from app.schemas.extract import ExtractParametersRequest, ExtractParametersResponse
 
@@ -14,11 +15,13 @@ class ExtractService:
         self,
         llm_client: LLMClient | None = None,
         input_preprocessor: InputPreprocessor | None = None,
+        llm_extraction_parser: LLMExtractionParser | None = None,
         extraction_validator: ExtractionValidator | None = None,
         prompt_file: str | None = None,
     ) -> None:
         self.llm_client = llm_client or LLMClient()
         self.input_preprocessor = input_preprocessor or InputPreprocessor()
+        self.llm_extraction_parser = llm_extraction_parser or LLMExtractionParser()
         self.extraction_validator = extraction_validator or ExtractionValidator()
 
         self.prompt_file = prompt_file or str(
@@ -50,8 +53,14 @@ class ExtractService:
         # 4) LLM 응답 JSON 파싱
         llm_output = self.llm_client.extract_json(llm_raw_text)
 
-        # 5) 검증 / 정규화 + 최종 응답 생성
+        # 5) LLM 응답 -> 내부 공통 포맷 파싱
+        parsed = self.llm_extraction_parser.parse(llm_output)
+
+        # 6) 공통 검증 / 정규화 + 최종 응답 생성
         return self.extraction_validator.validate_and_normalize(
             request_id=request.request_id,
-            llm_output=llm_output,
+            task_type=parsed["task_type"],
+            process_type=parsed["process_type"],
+            process_params=parsed["process_params"],
+            current_outputs=parsed["current_outputs"],
         )

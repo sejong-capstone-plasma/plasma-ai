@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from app.core.enums import ProcessType, TaskType, ValidationStatus
-from app.schemas.common import CommonBaseModel, CurrentOutputs, ValidatedProcessParams
+from app.schemas.common import CommonBaseModel, CurrentOutputs, ProcessParams, ValidatedProcessParams
 
 
 class ExtractParametersRequest(CommonBaseModel):
@@ -21,4 +21,17 @@ class ExtractParametersResponse(CommonBaseModel):
     current_outputs: CurrentOutputs | None = Field(
         default=None,
         description="Optional current output values extracted from user input"
+    )
+
+class ExtractValidateRequest(CommonBaseModel):
+    request_id: str = Field(..., description="Request identifier")
+    process_type: ProcessType = Field(..., description="Process type")
+    task_type: TaskType = Field(..., description="Task type")
+    process_params: ProcessParams = Field(
+        ...,
+        description="Structured process parameters from backend"
+    )
+    current_outputs: CurrentOutputs | None = Field(
+        default=None,
+        description="Optional current output values"
     )
