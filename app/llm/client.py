@@ -20,6 +20,10 @@ class LLMClient:
         self.max_tokens = settings.llm_max_tokens
 
     async def chat(self, system_prompt: str, user_prompt: str) -> str:
+        extra: dict = {}
+        if settings.llm_provider == "vllm":
+            extra["extra_body"] = {"chat_template_kwargs": {"enable_thinking": False}}
+
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -29,6 +33,7 @@ class LLMClient:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
+                **extra,
             )
         except Exception as e:
             raise ModelInferenceException(
@@ -71,6 +76,9 @@ class LLMClient:
     @staticmethod
     def extract_json(text: str) -> dict[str, Any]:
         text = text.strip()
+        
+        # Qwen3 등 thinking model의 <think>...</think> 블록 제거
+        text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
 
         # 1. 응답 전체가 JSON인 경우
         try:

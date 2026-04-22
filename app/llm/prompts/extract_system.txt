@@ -216,8 +216,8 @@ If the field is not mentioned at all:
 - set status_hint to MISSING
 
 If the field is mentioned but unclear, conflicting, incomplete, or not confidently mapped:
-- set value to null
-- set unit to null
+- extract value as a JSON number if it is explicitly stated in user_input, otherwise set value to null
+- extract unit exactly as stated if it is explicitly stated in user_input, otherwise set unit to null
 - set status_hint to AMBIGUOUS
 
 ## Ambiguity rules for process_params
@@ -228,14 +228,16 @@ Use AMBIGUOUS in cases such as:
 - the wording is too vague to map confidently
 - a number is present but the field identity is unclear
 - a value is present but the unit is not explicitly stated in user_input
+- a unit is present but the value is not explicitly stated in user_input
 - only part of the information is present for that field
 - the user says something like "power 600W" without telling whether it is source or bias
 
 Examples:
-- "power가 600W야" -> source_power = AMBIGUOUS, bias_power = AMBIGUOUS
-- "압력은 20 정도야" -> pressure = AMBIGUOUS (unit not stated; do not guess mTorr or any unit)
-- "source는 600인데 bias는 100W야" -> source_power = AMBIGUOUS because unit is missing, bias_power = VALID
-- "pressure가 20 mTorr인지 30 mTorr인지 모르겠어" -> pressure = AMBIGUOUS
+- "power가 600W야" -> source_power = {value: null, unit: null, status_hint: AMBIGUOUS}, bias_power = {value: null, unit: null, status_hint: AMBIGUOUS}
+- "압력은 20 정도야" -> pressure = {value: 20, unit: null, status_hint: AMBIGUOUS} (unit not stated; preserve the value 20 but do not guess the unit)
+- "source는 600인데 bias는 100W야" -> source_power = {value: 600, unit: null, status_hint: AMBIGUOUS} because unit is missing, bias_power = VALID
+- "바이어스 W야" -> bias_power = {value: null, unit: "W", status_hint: AMBIGUOUS} (value not stated; preserve the unit but set value to null)
+- "pressure가 20 mTorr인지 30 mTorr인지 모르겠어" -> pressure = {value: null, unit: null, status_hint: AMBIGUOUS}
 
 ## Missing rules for process_params
 
@@ -548,7 +550,7 @@ Output:
   "process_type": "ETCH",
   "process_params": {
     "pressure": {
-      "value": null,
+      "value": 20,
       "unit": null,
       "status_hint": "AMBIGUOUS"
     },
@@ -581,12 +583,12 @@ Output:
   "process_type": "ETCH",
   "process_params": {
     "pressure": {
-      "value": null,
+      "value": 30,
       "unit": null,
       "status_hint": "AMBIGUOUS"
     },
     "source_power": {
-      "value": null,
+      "value": 100,
       "unit": null,
       "status_hint": "AMBIGUOUS"
     },
