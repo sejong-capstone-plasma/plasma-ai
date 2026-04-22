@@ -1,13 +1,18 @@
-from pydantic import BaseModel
+from __future__ import annotations
 
-from app.schemas.common import ProcessParams
+from pydantic import Field
 
-
-class PredictRequest(BaseModel):
-    request_id: str
-    process_params: ProcessParams
+from app.core.enums import ProcessType
+from app.schemas.common import CommonBaseModel, PredictionResult, ProcessParams
 
 
-class PredictResponse(BaseModel):
-    request_id: str
-    prediction_result: str
+class PredictRequest(CommonBaseModel):
+    request_id: str = Field(..., description="Request identifier")
+    process_type: ProcessType = Field(..., description="Process type")
+    process_params: ProcessParams = Field(..., description="Confirmed process parameters")
+
+
+class PredictResponse(CommonBaseModel):
+    request_id: str = Field(..., description="Request identifier")
+    process_type: ProcessType = Field(..., description="Process type")
+    prediction_result: PredictionResult = Field(..., description="Model prediction output")
