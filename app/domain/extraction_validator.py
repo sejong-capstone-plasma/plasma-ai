@@ -13,8 +13,11 @@ class ExtractionValidator:
     PRESSURE_MIN_MTORR = 0.0
     PRESSURE_MAX_MTORR = 1000.0
 
-    POWER_MIN_W = 0.0
-    POWER_MAX_W = 5000.0
+    SOURCE_POWER_MIN_W = 0.0
+    SOURCE_POWER_MAX_W = 5000.0
+
+    BIAS_POWER_MIN_W = 0.0
+    BIAS_POWER_MAX_W = 5000.0
 
     def validate_and_normalize(
         self,
@@ -47,15 +50,26 @@ class ExtractionValidator:
     ) -> ValidatedProcessParams:
         return ValidatedProcessParams(
             pressure=self._normalize_pressure(process_params.pressure),
-            source_power=self._normalize_power(process_params.source_power),
-            bias_power=self._normalize_power(process_params.bias_power),
+            source_power=self._normalize_power(
+                process_params.source_power,
+                min_w=self.SOURCE_POWER_MIN_W,
+                max_w=self.SOURCE_POWER_MAX_W,
+            ),
+            bias_power=self._normalize_power(
+                process_params.bias_power,
+                min_w=self.BIAS_POWER_MIN_W,
+                max_w=self.BIAS_POWER_MAX_W,
+            ),
         )
 
     def _normalize_pressure(self, item: ValidatedValueWithUnit) -> ValidatedValueWithUnit:
         if item.value is None and item.unit is None:
             return self._with_status(item, FieldStatus.MISSING)
 
-        if item.value is None or item.unit is None:
+        if item.unit is None:
+            return self._with_status(item, FieldStatus.AMBIGUOUS)
+
+        if item.value is None:
             return self._with_status(item, FieldStatus.AMBIGUOUS)
 
         unit_norm = self._normalize_unit_text(item.unit)
@@ -83,11 +97,14 @@ class ExtractionValidator:
             status=status,
         )
 
-    def _normalize_power(self, item: ValidatedValueWithUnit) -> ValidatedValueWithUnit:
+    def _normalize_power(self, item: ValidatedValueWithUnit, *, min_w: float, max_w: float) -> ValidatedValueWithUnit:
         if item.value is None and item.unit is None:
             return self._with_status(item, FieldStatus.MISSING)
 
-        if item.value is None or item.unit is None:
+        if item.unit is None:
+            return self._with_status(item, FieldStatus.AMBIGUOUS)
+
+        if item.value is None:
             return self._with_status(item, FieldStatus.AMBIGUOUS)
 
         unit_norm = self._normalize_unit_text(item.unit)
@@ -105,8 +122,8 @@ class ExtractionValidator:
 
         status = self._range_status(
             value=value_w,
-            min_value=self.POWER_MIN_W,
-            max_value=self.POWER_MAX_W,
+            min_value=min_w,
+            max_value=max_w,
         )
 
         return ValidatedValueWithUnit(
