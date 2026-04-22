@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.core.exceptions import ModelInferenceException, ValidationException
+from app.core.exceptions import AppException, ModelInferenceException, ValidationException
 from app.domain.etch_score_calculator import EtchScoreCalculator
 from app.models.predictor import IonPredictor, Predictor
 from app.schemas.common import PredictionResult, ValueWithUnit
@@ -19,6 +19,8 @@ class PredictService:
     def execute(self, request: PredictRequest) -> PredictResponse:
         try:
             ion_flux, ion_energy = self.predictor.predict(request.process_params)
+        except AppException:
+            raise
         except ValueError as e:
             raise ValidationException(message=str(e)) from e
         except Exception as e:
