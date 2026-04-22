@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from app.core.exceptions import AppException, ModelInferenceException, ValidationException
+from app.core.exceptions import AppException, ModelInferenceException
 from app.domain.etch_score_calculator import EtchScoreCalculator
+from app.domain.predict_validator import PredictValidator
 from app.models.predictor import IonPredictor, Predictor
 from app.schemas.common import PredictionResult, ValueWithUnit
 from app.schemas.predict import PredictRequest, PredictResponse
@@ -12,17 +13,18 @@ class PredictService:
         self,
         predictor: Predictor | None = None,
         etch_score_calculator: EtchScoreCalculator | None = None,
+        validator: PredictValidator | None = None,
     ) -> None:
         self.predictor = predictor or IonPredictor()
         self.etch_score_calculator = etch_score_calculator or EtchScoreCalculator()
+        self.validator = validator or PredictValidator()
 
     def execute(self, request: PredictRequest) -> PredictResponse:
+        self.validator.validate(request)
         try:
             ion_flux, ion_energy = self.predictor.predict(request.process_params)
         except AppException:
             raise
-        except ValueError as e:
-            raise ValidationException(message=str(e)) from e
         except Exception as e:
             raise ModelInferenceException(message="모델 추론 중 오류가 발생했습니다.") from e
 

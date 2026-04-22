@@ -30,12 +30,6 @@ class IonPredictor(Predictor):
 
     MODEL_FILENAME = "xgb_ion_models.joblib"
 
-    PARAM_BOUNDS: dict[str, tuple[float, float]] = {
-        "pressure_mtorr": (2.0, 10.0),
-        "source_power_w": (100.0, 500.0),
-        "bias_power_w":   (0.0, 1000.0),
-    }
-
     def __init__(self, model_path: str | Path | None = None) -> None:
         self._model_path = Path(model_path) if model_path else settings.model_dir / self.MODEL_FILENAME
         self._loaded                  = False
@@ -73,8 +67,6 @@ class IonPredictor(Predictor):
         source_power_w = process_params.source_power.value
         bias_power_w   = process_params.bias_power.value
 
-        self._validate_range(pressure_mtorr, source_power_w, bias_power_w)
-
         row = pd.DataFrame([{
             "pressure_mtorr": pressure_mtorr,
             "source_power_w": source_power_w,
@@ -90,22 +82,3 @@ class IonPredictor(Predictor):
             energy = self._energy_model_off.predict(row_ext[self._energy_off_feature_cols])[0]
 
         return float(10 ** flux_log), float(energy)
-
-    def _validate_range(
-        self,
-        pressure_mtorr: float,
-        source_power_w: float,
-        bias_power_w: float,
-    ) -> None:
-        inputs = {
-            "pressure_mtorr": pressure_mtorr,
-            "source_power_w": source_power_w,
-            "bias_power_w"  : bias_power_w,
-        }
-        violations = []
-        for col, val in inputs.items():
-            lo, hi = self.PARAM_BOUNDS[col]
-            if not (lo <= val <= hi):
-                violations.append(f"'{col}' = {val} (허용 범위: [{lo}, {hi}])")
-        if violations:
-            raise ValueError("입력값이 허용 범위를 벗어났습니다:\n" + "\n".join(violations))
