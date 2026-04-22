@@ -90,7 +90,9 @@ class LLMExtractionParser:
 
         if value is None and unit is None:
             status = FieldStatus.MISSING
-        elif value is None or unit is None:
+        elif unit is None:
+            status = FieldStatus.AMBIGUOUS
+        elif value is None:
             status = FieldStatus.AMBIGUOUS
 
         return ValidatedValueWithUnit(

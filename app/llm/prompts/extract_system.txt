@@ -21,9 +21,9 @@ Therefore:
 - DO NOT perform strict engineering validation
 - DO NOT assign OUT_OF_RANGE
 - DO NOT invent values
-- DO NOT guess hidden units unless explicitly stated
+- DO NOT guess or infer units under any circumstances
 - DO NOT infer omitted numbers
-- DO NOT infer omitted units
+- DO NOT infer omitted units even from domain knowledge or context
 - DO NOT add explanations
 - DO NOT add comments
 - DO NOT output markdown
@@ -227,13 +227,13 @@ Use AMBIGUOUS in cases such as:
 - multiple conflicting values are given for the same field
 - the wording is too vague to map confidently
 - a number is present but the field identity is unclear
-- a unit is omitted and the field cannot be safely interpreted
+- a value is present but the unit is not explicitly stated in user_input
 - only part of the information is present for that field
 - the user says something like "power 600W" without telling whether it is source or bias
 
 Examples:
 - "power가 600W야" -> source_power = AMBIGUOUS, bias_power = AMBIGUOUS
-- "압력은 20 정도야" -> pressure = AMBIGUOUS if the unit is missing
+- "압력은 20 정도야" -> pressure = AMBIGUOUS (unit not stated; do not guess mTorr or any unit)
 - "source는 600인데 bias는 100W야" -> source_power = AMBIGUOUS because unit is missing, bias_power = VALID
 - "pressure가 20 mTorr인지 30 mTorr인지 모르겠어" -> pressure = AMBIGUOUS
 
@@ -531,4 +531,37 @@ Output:
       "unit": "nm/min"
     }
   }
+}
+
+### Few-shot example 4: value present but unit missing
+
+Input:
+{
+  "request_id": "req-fs-004",
+  "user_input": "pressure 20, source power 600 W, bias power 100 W 조건에서 ER 예측해줘."
+}
+
+Output:
+{
+  "request_id": "req-fs-004",
+  "task_type": "PREDICTION",
+  "process_type": "ETCH",
+  "process_params": {
+    "pressure": {
+      "value": null,
+      "unit": null,
+      "status_hint": "AMBIGUOUS"
+    },
+    "source_power": {
+      "value": 600,
+      "unit": "W",
+      "status_hint": "VALID"
+    },
+    "bias_power": {
+      "value": 100,
+      "unit": "W",
+      "status_hint": "VALID"
+    }
+  },
+  "current_outputs": null
 }
