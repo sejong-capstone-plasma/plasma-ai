@@ -16,8 +16,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r /workspace/requirements.txt
 
 COPY app /workspace/app
+COPY data/models /workspace/data/models
 
-RUN mkdir -p /workspace/data/models /workspace/data/hf_cache /workspace/data/outputs
+RUN mkdir -p /workspace/data/hf_cache /workspace/data/outputs
 
 EXPOSE 8000
 
