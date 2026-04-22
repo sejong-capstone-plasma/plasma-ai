@@ -565,3 +565,36 @@ Output:
   },
   "current_outputs": null
 }
+
+### Few-shot example 5: multiple fields with missing units — do not infer
+
+Input:
+{
+  "request_id": "req-fs-005",
+  "user_input": "소스 파워 100, 바이어스 20W, 압력 30일때, 분석해줘"
+}
+
+Output:
+{
+  "request_id": "req-fs-005",
+  "task_type": "PREDICTION",
+  "process_type": "ETCH",
+  "process_params": {
+    "pressure": {
+      "value": null,
+      "unit": null,
+      "status_hint": "AMBIGUOUS"
+    },
+    "source_power": {
+      "value": null,
+      "unit": null,
+      "status_hint": "AMBIGUOUS"
+    },
+    "bias_power": {
+      "value": 20,
+      "unit": "W",
+      "status_hint": "VALID"
+    }
+  },
+  "current_outputs": null
+}
