@@ -1,33 +1,36 @@
 from typing import List
 
-from pydantic import BaseModel
+from app.core.enums import ProcessType
+from app.schemas.common import (
+    BaselineOutputs,
+    CommonBaseModel,
+    ImprovementEvaluation,
+    ProcessParams,
+    PredictionResult,
+)
 
-from app.schemas.common import ProcessParams
 
-
-class GoalEvaluationItem(BaseModel):
-    goal_type: str
-    target_value: float
-    difference: float
-
-class GoalEvaluation(BaseModel):
-    ion_density_cm3: GoalEvaluationItem
-    ion_temp_ev: GoalEvaluationItem 
-
-class OptimizationCandidate(BaseModel):
+class OptimizationCandidate(CommonBaseModel):
     rank: int
     process_params: ProcessParams
-    predicted_outputs: str
-    goal_evaluation: GoalEvaluation
+    prediction_result: PredictionResult
+    improvement_evaluation: ImprovementEvaluation
     score: float
 
 
-class OptimizeRequest(BaseModel):
-    request_id: str
-    process_params: ProcessParams
-    target_specs: str
-
-
-class OptimizeResponse(BaseModel):
-    request_id: str
+class OptimizationResult(CommonBaseModel):
+    candidate_count: int
     optimization_candidates: List[OptimizationCandidate]
+
+
+class OptimizeRequest(CommonBaseModel):
+    request_id: str
+    process_type: ProcessType
+    process_params: ProcessParams
+
+
+class OptimizeResponse(CommonBaseModel):
+    request_id: str
+    process_type: ProcessType
+    baseline_outputs: BaselineOutputs
+    optimization_result: OptimizationResult
