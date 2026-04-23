@@ -1,4 +1,4 @@
-from typing import Annotated, List, Literal, Optional, Union
+from typing import Annotated, Literal, Optional, Union
 
 from pydantic import Field
 
@@ -7,6 +7,7 @@ from app.schemas.common import (
     BaselineOutputs,
     CommonBaseModel,
     CurrentOutputs,
+    ExplanationContent,
     ProcessParams,
     PredictionResult,
 )
@@ -42,10 +43,8 @@ GenerateExplanationRequest = Annotated[
 ExplanationRequest = GenerateExplanationRequest
 
 
-class ExplanationResponse(CommonBaseModel):
+class ExplanationResponse(ExplanationContent):
     request_id: str
-    summary: str
-    details: List[str]
 
 
 GenerateExplanationResponse = ExplanationResponse
