@@ -1,33 +1,51 @@
-from typing import List, Literal, Union
+from typing import Annotated, List, Literal, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import Field
 
-from app.schemas.common import ProcessParams
-from app.schemas.optimize import OptimizationCandidate
+from app.core.enums import ProcessType
+from app.schemas.common import (
+    BaselineOutputs,
+    CommonBaseModel,
+    CurrentOutputs,
+    ProcessParams,
+    PredictionResult,
+)
+from app.schemas.optimize import OptimizationResult
 
 
-class PredictionExplanationRequest(BaseModel):
+class PredictionExplanationRequest(CommonBaseModel):
     request_id: str
+    original_user_input: str
     task_type: Literal["PREDICTION"]
+    process_type: ProcessType
     process_params: ProcessParams
-    result: str
+    current_outputs: Optional[CurrentOutputs] = None
+    prediction_result: PredictionResult
 
 
-class OptimizationExplanationRequest(BaseModel):
+class OptimizationExplanationRequest(CommonBaseModel):
     request_id: str
+    original_user_input: str
     task_type: Literal["OPTIMIZATION"]
+    process_type: ProcessType
     process_params: ProcessParams
-    target_specs: str
-    result: List[OptimizationCandidate]
+    current_outputs: Optional[CurrentOutputs] = None
+    baseline_outputs: BaselineOutputs
+    optimization_result: OptimizationResult
 
 
-ExplanationRequest = Union[
-    PredictionExplanationRequest,
-    OptimizationExplanationRequest,
+GenerateExplanationRequest = Annotated[
+    Union[PredictionExplanationRequest, OptimizationExplanationRequest],
+    Field(discriminator="task_type"),
 ]
 
+ExplanationRequest = GenerateExplanationRequest
 
-class ExplanationResponse(BaseModel):
+
+class ExplanationResponse(CommonBaseModel):
     request_id: str
     summary: str
     details: List[str]
+
+
+GenerateExplanationResponse = ExplanationResponse
