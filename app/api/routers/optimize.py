@@ -8,5 +8,5 @@ optimize_service = OptimizeService()
 
 
 @router.post("/optimize", response_model=OptimizeResponse)
-def optimize(request: OptimizeRequest) -> OptimizeResponse:
-    return optimize_service.execute(request)
+async def optimize(request: OptimizeRequest) -> OptimizeResponse:
+    return await optimize_service.execute(request)
