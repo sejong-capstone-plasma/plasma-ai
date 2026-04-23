@@ -8,5 +8,5 @@ explanation_service = ExplanationService()
 
 
 @router.post("/generate-explanation", response_model=ExplanationResponse)
-def generate_explanation(request: ExplanationRequest) -> ExplanationResponse:
-    return explanation_service.execute(request)
+async def generate_explanation(request: ExplanationRequest) -> ExplanationResponse:
+    return await explanation_service.execute(request)
