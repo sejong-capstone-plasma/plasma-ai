@@ -16,7 +16,7 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 
 N_TRIALS = 200
 N_CANDIDATES = 3
-SEARCH_RATIO = 0.20  # ±20% around base values
+SEARCH_RATIO = 0.35  # ±35% around base values
 
 
 class OptimizerRunner:
@@ -73,8 +73,18 @@ class OptimizerRunner:
         ]
         improved.sort(key=lambda t: t.value, reverse=True)  # type: ignore[arg-type]
 
+        seen_scores: set[float] = set()
+        unique_improved = []
+        for trial in improved:
+            score_key = round(trial.user_attrs["etch_score"], 2)
+            if score_key not in seen_scores:
+                seen_scores.add(score_key)
+                unique_improved.append(trial)
+            if len(unique_improved) == N_CANDIDATES:
+                break
+
         candidates: list[OptimizationCandidate] = []
-        for rank, trial in enumerate(improved[:N_CANDIDATES], start=1):
+        for rank, trial in enumerate(unique_improved, start=1):
             p = trial.params
             etch_score = trial.user_attrs["etch_score"]
             flux = trial.user_attrs["flux"]
