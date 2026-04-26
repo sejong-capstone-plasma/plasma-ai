@@ -1,5 +1,7 @@
+from app.schemas.common import ExplanationContent
 from app.schemas.pipelines import (
     ExtractPipelineResponse,
+    PredictionPipelineRequest,
     PredictionPipelineResponse,
     OptimizationPipelineResponse,
 )
@@ -44,21 +46,33 @@ class AnalysisOrchestrator:
 
     async def run_prediction_pipeline(
         self,
-        request: PredictRequest,
+        request: PredictionPipelineRequest,
     ) -> PredictionPipelineResponse:
-        prediction_response: PredictResponse = await self.predict_service.execute(request)
+        predict_request = PredictRequest(
+            request_id=request.request_id,
+            process_type=request.process_type,
+            process_params=request.process_params,
+        )
+        predict_response: PredictResponse = self.predict_service.execute(predict_request)
 
         explanation_request = PredictionExplanationRequest(
             request_id=request.request_id,
+            original_user_input=request.original_user_input,
             task_type="PREDICTION",
+            process_type=request.process_type,
             process_params=request.process_params,
-            result=prediction_response.prediction_result,
+            prediction_result=predict_response.prediction_result,
         )
         explanation_response = await self.explanation_service.execute(explanation_request)
 
         return PredictionPipelineResponse(
-            prediction=prediction_response,
-            explanation=explanation_response,
+            request_id=predict_response.request_id,
+            process_type=predict_response.process_type,
+            prediction_result=predict_response.prediction_result,
+            explanation=ExplanationContent(
+                summary=explanation_response.summary,
+                details=explanation_response.details,
+            ),
         )
 
     async def run_optimization_pipeline(

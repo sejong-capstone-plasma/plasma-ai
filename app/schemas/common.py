@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel, Field, ConfigDict
 
 from app.core.enums import FieldStatus
@@ -47,3 +49,8 @@ class BaselineOutputs(CommonBaseModel):
 class ImprovementEvaluation(CommonBaseModel):
     increase_value: ValueWithUnit
     increase_percent: ValueWithUnit
+
+
+class ExplanationContent(CommonBaseModel):
+    summary: str
+    details: List[str]
