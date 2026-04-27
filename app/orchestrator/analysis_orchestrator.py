@@ -1,13 +1,14 @@
 from app.schemas.common import ExplanationContent
 from app.schemas.pipelines import (
     ExtractPipelineResponse,
+    OptimizationPipelineRequest,
+    OptimizationPipelineResponse,
     PredictionPipelineRequest,
     PredictionPipelineResponse,
-    OptimizationPipelineResponse,
 )
 from app.schemas.explanation import (
-    PredictionExplanationRequest,
     OptimizationExplanationRequest,
+    PredictionExplanationRequest,
 )
 from app.schemas.extract import (
     ExtractParametersRequest,
@@ -77,30 +78,34 @@ class AnalysisOrchestrator:
 
     async def run_optimization_pipeline(
         self,
-        request: OptimizeRequest,
+        request: OptimizationPipelineRequest,
     ) -> OptimizationPipelineResponse:
-        # 1) 현재 조건 기준 예측 먼저 수행
-        prediction_request = PredictRequest(
+        optimize_request = OptimizeRequest(
             request_id=request.request_id,
+            process_type=request.process_type,
             process_params=request.process_params,
         )
-        current_prediction: PredictResponse = await self.predict_service.execute(prediction_request)
+        optimization_response: OptimizeResponse = await self.optimize_service.execute(optimize_request)
 
-        # 2) 그 다음 최적화 수행
-        optimization_response: OptimizeResponse = await self.optimize_service.execute(request)
-
-        # 3) 최적화 결과 설명 생성
         explanation_request = OptimizationExplanationRequest(
             request_id=request.request_id,
+            original_user_input=request.original_user_input,
             task_type="OPTIMIZATION",
+            process_type=request.process_type,
             process_params=request.process_params,
-            target_specs=request.target_specs,
-            result=optimization_response.optimization_candidates,
+            current_outputs=request.current_outputs,
+            baseline_outputs=optimization_response.baseline_outputs,
+            optimization_result=optimization_response.optimization_result,
         )
         explanation_response = await self.explanation_service.execute(explanation_request)
 
         return OptimizationPipelineResponse(
-            current_prediction=current_prediction,
-            optimization=optimization_response,
-            explanation=explanation_response,
+            request_id=request.request_id,
+            process_type=request.process_type,
+            baseline_outputs=optimization_response.baseline_outputs,
+            optimization_result=optimization_response.optimization_result,
+            explanation=ExplanationContent(
+                summary=explanation_response.summary,
+                details=explanation_response.details,
+            ),
         )
