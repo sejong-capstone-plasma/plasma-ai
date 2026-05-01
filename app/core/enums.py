@@ -8,6 +8,8 @@ class ValidationStatus(str, Enum):
 class TaskType(str, Enum):
     PREDICTION = "PREDICTION"
     OPTIMIZATION = "OPTIMIZATION"
+    COMPARISON = "COMPARISON"
+    QUESTION = "QUESTION"
     UNSUPPORTED = "UNSUPPORTED"
 
 class ProcessType(str, Enum):
