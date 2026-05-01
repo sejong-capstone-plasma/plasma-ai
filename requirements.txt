@@ -9,3 +9,4 @@ openai==1.55.3
 pandas==2.3.3
 joblib==1.5.2
 xgboost
+optuna==4.4.0

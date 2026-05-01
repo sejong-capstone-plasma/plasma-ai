@@ -2,12 +2,12 @@ from fastapi import APIRouter
 
 from app.orchestrator.analysis_orchestrator import AnalysisOrchestrator
 from app.schemas.extract import ExtractParametersRequest
-from app.schemas.optimize import OptimizeRequest
 from app.schemas.pipelines import (
     ExtractPipelineResponse,
+    OptimizationPipelineRequest,
+    OptimizationPipelineResponse,
     PredictionPipelineRequest,
     PredictionPipelineResponse,
-    OptimizationPipelineResponse,
 )
 
 router = APIRouter()
@@ -25,5 +25,5 @@ async def run_predict(request: PredictionPipelineRequest) -> PredictionPipelineR
 
 
 @router.post("/optimize", response_model=OptimizationPipelineResponse)
-async def run_optimize(request: OptimizeRequest) -> OptimizationPipelineResponse:
+async def run_optimize(request: OptimizationPipelineRequest) -> OptimizationPipelineResponse:
     return await analysis_orchestrator.run_optimization_pipeline(request)

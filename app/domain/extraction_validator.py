@@ -10,14 +10,14 @@ from app.schemas.extract import ExtractParametersResponse
 
 
 class ExtractionValidator:
-    PRESSURE_MIN_MTORR = 0.0
-    PRESSURE_MAX_MTORR = 1000.0
+    PRESSURE_MIN_MTORR = 2.0
+    PRESSURE_MAX_MTORR = 10.0
 
-    SOURCE_POWER_MIN_W = 0.0
-    SOURCE_POWER_MAX_W = 5000.0
+    SOURCE_POWER_MIN_W = 100.0
+    SOURCE_POWER_MAX_W = 500.0
 
     BIAS_POWER_MIN_W = 0.0
-    BIAS_POWER_MAX_W = 5000.0
+    BIAS_POWER_MAX_W = 1500.0
 
     def validate_and_normalize(
         self,
