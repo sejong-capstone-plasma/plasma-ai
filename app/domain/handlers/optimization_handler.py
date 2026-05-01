@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from app.core.enums import ProcessType, TaskType
@@ -29,4 +30,25 @@ class OptimizationHandler(BaseTaskHandler):
         task_type: TaskType,
         process_type: ProcessType,
     ) -> ExtractParametersResponse:
-        raise NotImplementedError
+        extract_user_prompt = json.dumps(
+            {
+                "request_id": request.request_id,
+                "user_input": cleaned_input,
+            },
+            ensure_ascii=False,
+        )
+        extract_raw = await self.llm_client.chat_with_history_from_file(
+            prompt_file=_PROMPT_FILE,
+            history=history,
+            user_prompt=extract_user_prompt,
+        )
+        extract_output = self.llm_client.extract_json(extract_raw)
+        extract_parsed = self.llm_extraction_parser.parse(extract_output)
+
+        return self.extraction_validator.validate_and_normalize(
+            request_id=request.request_id,
+            task_type=task_type,
+            process_type=process_type,
+            process_params=extract_parsed["process_params"],
+            current_outputs=extract_parsed["current_outputs"],
+        )
