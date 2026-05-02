@@ -3,11 +3,21 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from app.core.enums import TaskType
 from app.domain.extraction_validator import ExtractionValidator
+from app.domain.handlers.base import BaseTaskHandler
+from app.domain.handlers.comparison_handler import ComparisonHandler
+from app.domain.handlers.optimization_handler import OptimizationHandler
+from app.domain.handlers.prediction_handler import PredictionHandler
+from app.domain.handlers.question_handler import QuestionHandler
+from app.domain.handlers.unsupported_handler import UnsupportedHandler
 from app.domain.input_preprocessor import InputPreprocessor
+from app.domain.llm_classification_parser import LLMClassificationParser
 from app.domain.llm_extraction_parser import LLMExtractionParser
 from app.llm.client import LLMClient
 from app.schemas.extract import ExtractParametersRequest, ExtractParametersResponse
+
+_PROMPTS_DIR = Path(__file__).resolve().parents[1] / "llm" / "prompts"
 
 
 class ExtractService:
@@ -15,52 +25,60 @@ class ExtractService:
         self,
         llm_client: LLMClient | None = None,
         input_preprocessor: InputPreprocessor | None = None,
+        llm_classification_parser: LLMClassificationParser | None = None,
         llm_extraction_parser: LLMExtractionParser | None = None,
         extraction_validator: ExtractionValidator | None = None,
-        prompt_file: str | None = None,
+        classify_prompt_file: str | None = None,
     ) -> None:
-        self.llm_client = llm_client or LLMClient()
-        self.input_preprocessor = input_preprocessor or InputPreprocessor()
-        self.llm_extraction_parser = llm_extraction_parser or LLMExtractionParser()
-        self.extraction_validator = extraction_validator or ExtractionValidator()
-
-        self.prompt_file = prompt_file or str(
-            Path(__file__).resolve().parents[1] / "llm" / "prompts" / "extract_system.txt"
+        self._llm_client = llm_client or LLMClient()
+        self._input_preprocessor = input_preprocessor or InputPreprocessor()
+        self._llm_classification_parser = llm_classification_parser or LLMClassificationParser()
+        self._classify_prompt_file = classify_prompt_file or str(
+            _PROMPTS_DIR / "classify_system.txt"
         )
+
+        handler_kwargs = dict(
+            llm_client=self._llm_client,
+            llm_extraction_parser=llm_extraction_parser or LLMExtractionParser(),
+            extraction_validator=extraction_validator or ExtractionValidator(),
+        )
+        self._handlers: dict[TaskType, BaseTaskHandler] = {
+            TaskType.PREDICTION: PredictionHandler(**handler_kwargs),
+            TaskType.OPTIMIZATION: OptimizationHandler(**handler_kwargs),
+            TaskType.COMPARISON: ComparisonHandler(**handler_kwargs),
+            TaskType.QUESTION: QuestionHandler(**handler_kwargs),
+            TaskType.UNSUPPORTED: UnsupportedHandler(**handler_kwargs),
+        }
 
     async def execute(
         self,
         request: ExtractParametersRequest,
     ) -> ExtractParametersResponse:
-        # 1) 입력 전처리
-        cleaned_input = self.input_preprocessor.clean(request.user_input)
+        cleaned_input = self._input_preprocessor.clean(request.user_input)
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
 
-        # 2) LLM user prompt 구성
-        llm_user_prompt = json.dumps(
-            {
-                "request_id": request.request_id,
-                "user_input": cleaned_input,
-            },
+        # Step 1: Classify task_type + process_type (with history context)
+        classify_user_prompt = json.dumps(
+            {"user_input": cleaned_input},
             ensure_ascii=False,
         )
-
-        # 3) LLM 호출
-        llm_raw_text = await self.llm_client.chat_from_file(
-            prompt_file=self.prompt_file,
-            user_prompt=llm_user_prompt,
+        classify_raw = await self._llm_client.chat_with_history_from_file(
+            prompt_file=self._classify_prompt_file,
+            history=history,
+            user_prompt=classify_user_prompt,
         )
+        classify_output = self._llm_client.extract_json(classify_raw)
+        classify_parsed = self._llm_classification_parser.parse(classify_output)
 
-        # 4) LLM 응답 JSON 파싱
-        llm_output = self.llm_client.extract_json(llm_raw_text)
+        task_type = classify_parsed["task_type"]
+        process_type = classify_parsed["process_type"]
 
-        # 5) LLM 응답 -> 내부 공통 포맷 파싱
-        parsed = self.llm_extraction_parser.parse(llm_output)
-
-        # 6) 공통 검증 / 정규화 + 최종 응답 생성
-        return self.extraction_validator.validate_and_normalize(
-            request_id=request.request_id,
-            task_type=parsed["task_type"],
-            process_type=parsed["process_type"],
-            process_params=parsed["process_params"],
-            current_outputs=parsed["current_outputs"],
+        # Step 2: Dispatch to task-specific handler
+        handler = self._handlers[task_type]
+        return await handler.execute(
+            request=request,
+            cleaned_input=cleaned_input,
+            history=history,
+            task_type=task_type,
+            process_type=process_type,
         )

@@ -1,12 +1,20 @@
+from typing import List, Literal
+
 from pydantic import Field
 
 from app.core.enums import ProcessType, TaskType, ValidationStatus
 from app.schemas.common import CommonBaseModel, CurrentOutputs, ProcessParams, ValidatedProcessParams
 
 
+class ChatMessage(CommonBaseModel):
+    role: Literal["user", "assistant"] = Field(..., description="Message role")
+    content: str = Field(..., description="Message content")
+
+
 class ExtractParametersRequest(CommonBaseModel):
     request_id: str = Field(..., description="Request identifier")
     user_input: str = Field(..., description="Natural language process analysis request")
+    history: List[ChatMessage] = Field(default_factory=list, description="Previous conversation history")
 
 
 class ExtractParametersResponse(CommonBaseModel):

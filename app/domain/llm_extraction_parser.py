@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.enums import FieldStatus, ProcessType, TaskType
+from app.core.enums import FieldStatus
 from app.core.exceptions import ModelInferenceException
 from app.schemas.common import (
     CurrentOutputs,
@@ -42,8 +42,6 @@ class LLMExtractionParser:
             )
 
         return {
-            "task_type": self._parse_task_type(llm_output.get("task_type")),
-            "process_type": self._parse_process_type(llm_output.get("process_type")),
             "process_params": ValidatedProcessParams(
                 pressure=self._parse_process_field(process_params_raw.get("pressure")),
                 source_power=self._parse_process_field(process_params_raw.get("source_power")),
@@ -51,18 +49,6 @@ class LLMExtractionParser:
             ),
             "current_outputs": self._parse_current_outputs(current_outputs_raw),
         }
-
-    def _parse_task_type(self, raw: Any) -> TaskType:
-        try:
-            return TaskType(raw)
-        except Exception:
-            return TaskType.UNSUPPORTED
-
-    def _parse_process_type(self, raw: Any) -> ProcessType:
-        try:
-            return ProcessType(raw)
-        except Exception:
-            return ProcessType.UNKNOWN
 
     def _parse_status_hint(self, raw: Any) -> FieldStatus:
         if raw == FieldStatus.VALID.value:

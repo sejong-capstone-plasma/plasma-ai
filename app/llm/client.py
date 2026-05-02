@@ -56,6 +56,76 @@ class LLMClient:
 
         return content
 
+    async def chat_with_history(
+        self,
+        system_prompt: str,
+        history: list[dict[str, str]],
+        user_prompt: str,
+    ) -> str:
+        extra: dict = {}
+        if settings.llm_provider == "vllm":
+            extra["extra_body"] = {"chat_template_kwargs": {"enable_thinking": False}}
+
+        messages: list[dict] = [{"role": "system", "content": system_prompt}]
+        for msg in history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+        messages.append({"role": "user", "content": user_prompt})
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                messages=messages,
+                **extra,
+            )
+        except Exception as e:
+            raise ModelInferenceException(
+                message="LLM 호출에 실패했습니다.",
+                details={"reason": str(e)},
+            ) from e
+
+        if not response.choices:
+            raise ModelInferenceException(
+                message="LLM 응답에 choices가 없습니다.",
+                details={},
+            )
+
+        content = response.choices[0].message.content
+        if not content:
+            raise ModelInferenceException(
+                message="LLM 응답 content가 비어 있습니다.",
+                details={},
+            )
+
+        return content
+
+    async def chat_with_history_from_file(
+        self,
+        prompt_file: str,
+        history: list[dict[str, str]],
+        user_prompt: str,
+    ) -> str:
+        try:
+            prompt_path = Path(prompt_file).resolve()
+            system_prompt = prompt_path.read_text(encoding="utf-8")
+        except FileNotFoundError as e:
+            raise ModelNotReadyException(
+                message="프롬프트 파일을 찾을 수 없습니다.",
+                details={"prompt_file": prompt_file},
+            ) from e
+        except Exception as e:
+            raise ModelNotReadyException(
+                message="프롬프트 파일을 읽는 데 실패했습니다.",
+                details={"prompt_file": prompt_file, "reason": str(e)},
+            ) from e
+
+        return await self.chat_with_history(
+            system_prompt=system_prompt,
+            history=history,
+            user_prompt=user_prompt,
+        )
+
     async def chat_from_file(self, prompt_file: str, user_prompt: str) -> str:
         try:
             prompt_path = Path(prompt_file).resolve()
