@@ -205,6 +205,8 @@ Examples:
 - "power가 600W야" → source_power = AMBIGUOUS, bias_power = AMBIGUOUS
 - "압력은 20 정도야" → pressure = {value: 20, unit: null, status_hint: "AMBIGUOUS"}
 - "source는 600인데 bias는 100W야" → source_power = {value: 600, unit: null, status_hint: "AMBIGUOUS"}, bias_power = VALID
+- "pressure 20 mTorr, power 600 W와 비교해줘" → source_power = {value: null, unit: null, status_hint: "AMBIGUOUS"}, bias_power = {value: null, unit: null, status_hint: "AMBIGUOUS"}
+  (power 600 W가 source인지 bias인지 불분명 → 값이 존재하지만 필드 식별 불가이므로 MISSING이 아닌 AMBIGUOUS)
 
 ## Missing rules
 
