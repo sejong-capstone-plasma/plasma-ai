@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from app.core.enums import ProcessType, TaskType
@@ -20,8 +21,6 @@ class ComparisonHandler(BaseTaskHandler):
     - 3-2. One condition in current utterance → combine with one from history, or INVALID_FIELD if missing
     - 3-3. Both conditions in current utterance → extract both directly
     - 3-4. Current utterance modifies a history condition → LLM applies delta to produce condition_b
-
-    Note: not yet implemented — returns UNSUPPORTED.
     """
 
     async def execute(
@@ -32,4 +31,24 @@ class ComparisonHandler(BaseTaskHandler):
         task_type: TaskType,
         process_type: ProcessType,
     ) -> ExtractParametersResponse:
-        return self._unsupported_response(request.request_id, task_type, process_type)
+        extract_user_prompt = json.dumps(
+            {
+                "request_id": request.request_id,
+                "user_input": cleaned_input,
+            },
+            ensure_ascii=False,
+        )
+        extract_raw = await self.llm_client.chat_with_history_from_file(
+            prompt_file=_PROMPT_FILE,
+            history=history,
+            user_prompt=extract_user_prompt,
+        )
+        extract_output = self.llm_client.extract_json(extract_raw)
+        parsed = self.llm_extraction_parser.parse_comparison(extract_output)
+
+        return self.extraction_validator.validate_comparison(
+            request_id=request.request_id,
+            process_type=process_type,
+            condition_a_params=parsed["condition_a"],
+            condition_b_params=parsed["condition_b"],
+        )

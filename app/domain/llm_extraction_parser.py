@@ -117,6 +117,35 @@ class LLMExtractionParser:
             return ValueWithUnit(value=value * 1000.0, unit="nm/min")
 
         return None
+    
+    def parse_comparison(
+        self,
+        llm_output: dict[str, Any],
+    ) -> dict[str, ValidatedProcessParams]:
+        if not isinstance(llm_output, dict):
+            raise ModelInferenceException(
+                message="LLM 출력 형식이 올바르지 않습니다.",
+                details={
+                    "reason": "llm_output_must_be_object",
+                    "actual_type": type(llm_output).__name__,
+                },
+            )
+
+        condition_a_raw = llm_output.get("condition_a") or {}
+        condition_b_raw = llm_output.get("condition_b") or {}
+
+        return {
+            "condition_a": ValidatedProcessParams(
+                pressure=self._parse_process_field(condition_a_raw.get("pressure")),
+                source_power=self._parse_process_field(condition_a_raw.get("source_power")),
+                bias_power=self._parse_process_field(condition_a_raw.get("bias_power")),
+            ),
+            "condition_b": ValidatedProcessParams(
+                pressure=self._parse_process_field(condition_b_raw.get("pressure")),
+                source_power=self._parse_process_field(condition_b_raw.get("source_power")),
+                bias_power=self._parse_process_field(condition_b_raw.get("bias_power")),
+            ),
+        }    
 
     @staticmethod
     def _normalize_unit_text(unit: str) -> str:

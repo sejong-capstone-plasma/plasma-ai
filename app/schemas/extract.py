@@ -22,24 +22,40 @@ class ExtractParametersResponse(CommonBaseModel):
     validation_status: ValidationStatus = Field(..., description="Overall validation status")
     process_type: ProcessType = Field(..., description="Detected process type")
     task_type: TaskType = Field(..., description="Detected task type")
-    process_params: ValidatedProcessParams = Field(
-        ...,
-        description="Extracted and validated process parameters"
+    process_params: ValidatedProcessParams | None = Field(
+        default=None,
+        description="Extracted and validated process parameters (PREDICTION/OPTIMIZATION only)"
     )
     current_outputs: CurrentOutputs | None = Field(
         default=None,
         description="Optional current output values extracted from user input"
+    )
+    condition_a: ValidatedProcessParams | None = Field(
+        default=None,
+        description="First condition (COMPARISON only)"
+    )
+    condition_b: ValidatedProcessParams | None = Field(
+        default=None,
+        description="Second condition (COMPARISON only)"
     )
 
 class ExtractValidateRequest(CommonBaseModel):
     request_id: str = Field(..., description="Request identifier")
     process_type: ProcessType = Field(..., description="Process type")
     task_type: TaskType = Field(..., description="Task type")
-    process_params: ProcessParams = Field(
-        ...,
-        description="Structured process parameters from backend"
+    process_params: ProcessParams | None = Field(
+        default=None,
+        description="Structured process parameters from backend (PREDICTION/OPTIMIZATION only)"
     )
     current_outputs: CurrentOutputs | None = Field(
         default=None,
         description="Optional current output values"
+    )
+    condition_a: ProcessParams | None = Field(
+        default=None,
+        description="First condition (COMPARISON only)"
+    )
+    condition_b: ProcessParams | None = Field(
+        default=None,
+        description="Second condition (COMPARISON only)"
     )

@@ -44,6 +44,35 @@ class ExtractionValidator:
             current_outputs=current_outputs,
         )
 
+    def validate_comparison(
+        self,
+        request_id: str,
+        process_type: ProcessType,
+        condition_a_params: ValidatedProcessParams,
+        condition_b_params: ValidatedProcessParams,
+    ) -> ExtractParametersResponse:
+        norm_a = self._normalize_process_params(condition_a_params)
+        norm_b = self._normalize_process_params(condition_b_params)
+
+        status_a = self._determine_validation_status(TaskType.COMPARISON, process_type, norm_a)
+        status_b = self._determine_validation_status(TaskType.COMPARISON, process_type, norm_b)
+
+        if status_a == ValidationStatus.UNSUPPORTED:
+            overall = ValidationStatus.UNSUPPORTED
+        elif status_a == ValidationStatus.VALID and status_b == ValidationStatus.VALID:
+            overall = ValidationStatus.VALID
+        else:
+            overall = ValidationStatus.INVALID_FIELD
+
+        return ExtractParametersResponse(
+            request_id=request_id,
+            validation_status=overall,
+            process_type=process_type,
+            task_type=TaskType.COMPARISON,
+            condition_a=norm_a,
+            condition_b=norm_b,
+        )
+
     def _normalize_process_params(
         self,
         process_params: ValidatedProcessParams,
