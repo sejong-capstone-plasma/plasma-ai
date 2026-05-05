@@ -17,7 +17,7 @@ class ExtractionValidator:
     SOURCE_POWER_MAX_W = 500.0
 
     BIAS_POWER_MIN_W = 0.0
-    BIAS_POWER_MAX_W = 1500.0
+    BIAS_POWER_MAX_W = 1000.0
 
     def validate_and_normalize(
         self,
