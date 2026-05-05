@@ -6,6 +6,7 @@ from app.core.enums import ProcessType
 from app.schemas.common import (
     BaselineOutputs,
     CommonBaseModel,
+    ConditionResult,
     CurrentOutputs,
     ExplanationContent,
     PredictionResult,
@@ -47,3 +48,18 @@ class OptimizationPipelineResponse(CommonBaseModel):
     baseline_outputs: BaselineOutputs
     optimization_result: OptimizationResult
     explanation: ExplanationContent
+
+
+class ComparisonPipelineRequest(CommonBaseModel):
+    request_id: str = Field(..., description="Request identifier")
+    original_user_input: str = Field(..., description="Original user input text")
+    process_type: ProcessType = Field(..., description="Process type")
+    condition_a: ProcessParams = Field(..., description="First condition")
+    condition_b: ProcessParams = Field(..., description="Second condition")
+
+
+class ComparisonPipelineResponse(CommonBaseModel):
+    request_id: str
+    process_type: ProcessType
+    condition_a: ConditionResult
+    condition_b: ConditionResult
