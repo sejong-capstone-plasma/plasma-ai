@@ -54,3 +54,9 @@ class ImprovementEvaluation(CommonBaseModel):
 class ExplanationContent(CommonBaseModel):
     summary: str
     details: List[str]
+
+
+class ConditionResult(CommonBaseModel):
+    process_params: ProcessParams
+    prediction_result: PredictionResult
+    explanation: ExplanationContent

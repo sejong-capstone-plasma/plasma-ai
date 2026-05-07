@@ -19,7 +19,7 @@ class ParameterImpactService:
     SOURCE_POWER_MIN = 100.0
     SOURCE_POWER_MAX = 500.0
     BIAS_POWER_MIN = 0.0
-    BIAS_POWER_MAX = 1500.0
+    BIAS_POWER_MAX = 1000.0
 
     def __init__(
         self,

@@ -1,5 +1,9 @@
-from app.schemas.common import ExplanationContent
+import asyncio
+
+from app.schemas.common import ConditionResult, ExplanationContent
 from app.schemas.pipelines import (
+    ComparisonPipelineRequest,
+    ComparisonPipelineResponse,
     ExtractPipelineResponse,
     OptimizationPipelineRequest,
     OptimizationPipelineResponse,
@@ -107,5 +111,68 @@ class AnalysisOrchestrator:
             explanation=ExplanationContent(
                 summary=explanation_response.summary,
                 details=explanation_response.details,
+            ),
+        )
+
+    async def run_comparison_pipeline(
+        self,
+        request: ComparisonPipelineRequest,
+    ) -> ComparisonPipelineResponse:
+        predict_response_a: PredictResponse = self.predict_service.execute(
+            PredictRequest(
+                request_id=request.request_id,
+                process_type=request.process_type,
+                process_params=request.condition_a,
+            )
+        )
+        predict_response_b: PredictResponse = self.predict_service.execute(
+            PredictRequest(
+                request_id=request.request_id,
+                process_type=request.process_type,
+                process_params=request.condition_b,
+            )
+        )
+
+        explanation_response_a, explanation_response_b = await asyncio.gather(
+            self.explanation_service.execute(
+                PredictionExplanationRequest(
+                    request_id=request.request_id,
+                    original_user_input=request.original_user_input,
+                    task_type="PREDICTION",
+                    process_type=request.process_type,
+                    process_params=request.condition_a,
+                    prediction_result=predict_response_a.prediction_result,
+                )
+            ),
+            self.explanation_service.execute(
+                PredictionExplanationRequest(
+                    request_id=request.request_id,
+                    original_user_input=request.original_user_input,
+                    task_type="PREDICTION",
+                    process_type=request.process_type,
+                    process_params=request.condition_b,
+                    prediction_result=predict_response_b.prediction_result,
+                )
+            ),
+        )
+
+        return ComparisonPipelineResponse(
+            request_id=request.request_id,
+            process_type=request.process_type,
+            condition_a=ConditionResult(
+                process_params=request.condition_a,
+                prediction_result=predict_response_a.prediction_result,
+                explanation=ExplanationContent(
+                    summary=explanation_response_a.summary,
+                    details=explanation_response_a.details,
+                ),
+            ),
+            condition_b=ConditionResult(
+                process_params=request.condition_b,
+                prediction_result=predict_response_b.prediction_result,
+                explanation=ExplanationContent(
+                    summary=explanation_response_b.summary,
+                    details=explanation_response_b.details,
+                ),
             ),
         )

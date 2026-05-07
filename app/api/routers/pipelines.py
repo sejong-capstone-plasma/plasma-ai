@@ -3,6 +3,8 @@ from fastapi import APIRouter
 from app.orchestrator.analysis_orchestrator import AnalysisOrchestrator
 from app.schemas.extract import ExtractParametersRequest
 from app.schemas.pipelines import (
+    ComparisonPipelineRequest,
+    ComparisonPipelineResponse,
     ExtractPipelineResponse,
     OptimizationPipelineRequest,
     OptimizationPipelineResponse,
@@ -27,3 +29,8 @@ async def run_predict(request: PredictionPipelineRequest) -> PredictionPipelineR
 @router.post("/optimize", response_model=OptimizationPipelineResponse)
 async def run_optimize(request: OptimizationPipelineRequest) -> OptimizationPipelineResponse:
     return await analysis_orchestrator.run_optimization_pipeline(request)
+
+
+@router.post("/compare", response_model=ComparisonPipelineResponse)
+async def run_compare(request: ComparisonPipelineRequest) -> ComparisonPipelineResponse:
+    return await analysis_orchestrator.run_comparison_pipeline(request)
