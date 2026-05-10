@@ -4,5 +4,9 @@ __pycache__/
 .env
 .env.local
 .env.prod
-data
+# data — 바이너리/대용량 제외, 수동 관리 문서는 포함
+data/knowledge/raw/*.pdf
+data/knowledge/raw/papers/
+data/models/
+data/index/
 .idea/
