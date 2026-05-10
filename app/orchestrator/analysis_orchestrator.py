@@ -9,6 +9,8 @@ from app.schemas.pipelines import (
     OptimizationPipelineResponse,
     PredictionPipelineRequest,
     PredictionPipelineResponse,
+    QuestionPipelineRequest,
+    QuestionPipelineResponse,
 )
 from app.schemas.explanation import (
     OptimizationExplanationRequest,
@@ -30,6 +32,7 @@ from app.services.explanation_service import ExplanationService
 from app.services.extract_service import ExtractService
 from app.services.optimize_service import OptimizeService
 from app.services.predict_service import PredictService
+from app.services.question_service import QuestionService
 
 
 class AnalysisOrchestrator:
@@ -38,6 +41,7 @@ class AnalysisOrchestrator:
         self.predict_service = PredictService()
         self.optimize_service = OptimizeService()
         self.explanation_service = ExplanationService()
+        self.question_service = QuestionService()
 
     async def run_extract_pipeline(
         self,
@@ -176,3 +180,9 @@ class AnalysisOrchestrator:
                 ),
             ),
         )
+    
+    async def run_question_pipeline(
+        self,
+        request: QuestionPipelineRequest,
+    ) -> QuestionPipelineResponse:
+        return await self.question_service.execute(request)
