@@ -63,3 +63,8 @@ class ComparisonPipelineResponse(CommonBaseModel):
     process_type: ProcessType
     condition_a: ConditionResult
     condition_b: ConditionResult
+
+
+# Question pipeline schemas are defined in schemas/question.py
+from app.schemas.question import QuestionPipelineRequest as QuestionPipelineRequest  # noqa: E402
+from app.schemas.question import QuestionPipelineResponse as QuestionPipelineResponse  # noqa: E402
