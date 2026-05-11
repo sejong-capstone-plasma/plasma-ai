@@ -41,7 +41,12 @@ def extract(path: str, max_pages: int) -> dict:
     from pypdf import PdfReader
 
     reader = PdfReader(path)
-    pages = [p.extract_text() or "" for p in reader.pages[:max_pages]]
+    pages = []
+    for page in reader.pages[:max_pages]:
+        try:
+            pages.append(page.extract_text() or "")
+        except Exception:
+            pages.append("")
 
     meta = reader.metadata or {}
     title = (meta.get("/Title") or "").strip()

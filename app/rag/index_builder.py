@@ -139,7 +139,7 @@ class IndexBuilder:
                 timeout=self._PDF_TIMEOUT,
             )
             if result.returncode != 0:
-                logger.warning("  PDF subprocess error: %s", result.stderr[:300])
+                logger.warning("  PDF subprocess error: %s", result.stderr[:1000])
                 return None
             return json.loads(result.stdout)
         except subprocess.TimeoutExpired:
