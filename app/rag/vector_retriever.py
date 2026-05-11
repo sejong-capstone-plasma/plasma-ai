@@ -4,6 +4,7 @@ import chromadb
 
 from app.core.config import settings
 from app.rag.base_retriever import BaseRetriever
+from app.rag.embedding import get_embedding_function
 from app.schemas.question import SourceDocument, SourceMetadata
 
 
@@ -22,7 +23,10 @@ class VectorRetriever(BaseRetriever):
     def _get_collection(self) -> chromadb.Collection:
         if self._collection is None:
             client = chromadb.PersistentClient(path=self.index_dir)
-            self._collection = client.get_collection(self.collection_name)
+            self._collection = client.get_collection(
+                self.collection_name,
+                embedding_function=get_embedding_function(),
+            )
         return self._collection
 
     async def retrieve(self, query: str) -> list[SourceDocument]:

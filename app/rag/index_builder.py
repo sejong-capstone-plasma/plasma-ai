@@ -8,6 +8,7 @@ import chromadb
 
 from app.core.config import settings
 from app.rag.chunker import Chunker
+from app.rag.embedding import get_embedding_function
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,10 @@ class IndexBuilder:
         existing = [c.name for c in client.list_collections()]
         if self.collection_name in existing:
             client.delete_collection(self.collection_name)
-        collection = client.create_collection(self.collection_name)
+        collection = client.create_collection(
+            self.collection_name,
+            embedding_function=get_embedding_function(),
+        )
 
         docs = self._discover_documents()
         logger.info("Found %d documents in %s", len(docs), self.docs_dir)

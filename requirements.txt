@@ -13,3 +13,4 @@ xgboost
 optuna==4.4.0
 chromadb==1.5.1
 pypdf==5.1.0
+sentence-transformers==3.4.1
