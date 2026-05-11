@@ -43,6 +43,12 @@ class Settings(BaseSettings):
     hf_cache_dir: Path = Field(default=BASE_DIR / "data" / "hf_cache", alias="HF_CACHE_DIR")
     output_dir: Path = Field(default=BASE_DIR / "data" / "outputs", alias="OUTPUT_DIR")
 
+    rag_docs_dir: Path = Field(default=BASE_DIR / "data" / "knowledge" / "raw", alias="RAG_DOCS_DIR")
+    rag_index_dir: Path = Field(default=BASE_DIR / "data" / "index" / "chroma", alias="RAG_INDEX_DIR")
+    rag_collection_name: str = Field(default="plasma_knowledge", alias="RAG_COLLECTION_NAME")
+    rag_chunk_size: int = Field(default=500, alias="RAG_CHUNK_SIZE")
+    rag_chunk_overlap: int = Field(default=100, alias="RAG_CHUNK_OVERLAP")
+
     llm_provider: Literal["ollama", "vllm"] = Field(default="ollama", alias="LLM_PROVIDER")
     llm_base_url: str = Field(default=DEFAULT_LLM_BASE_URL, alias="LLM_BASE_URL")
     llm_api_key: str = Field(default="ollama", alias="LLM_API_KEY")
@@ -55,7 +61,7 @@ class Settings(BaseSettings):
     hf_hub_offline: bool = Field(default=False, alias="HF_HUB_OFFLINE")
     transformers_offline: bool = Field(default=False, alias="TRANSFORMERS_OFFLINE")
 
-    @field_validator("model_dir", "hf_cache_dir", "output_dir", mode="before")
+    @field_validator("model_dir", "hf_cache_dir", "output_dir", "rag_docs_dir", "rag_index_dir", mode="before")
     @classmethod
     def resolve_relative_path(cls, v):
         path = Path(v)
