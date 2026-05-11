@@ -6,7 +6,7 @@ from pathlib import Path
 from app.core.exceptions import ModelInferenceException
 from app.llm.client import LLMClient
 from app.rag.base_retriever import BaseRetriever
-from app.rag.null_retriever import NullRetriever
+from app.rag.vector_retriever import VectorRetriever
 from app.schemas.question import QuestionPipelineRequest, QuestionPipelineResponse, SourceDocument
 
 _PROMPTS_DIR = Path(__file__).resolve().parents[1] / "llm" / "prompts"
@@ -29,7 +29,7 @@ class QuestionService:
         prompt_file: str | None = None,
     ) -> None:
         self.llm_client = llm_client or LLMClient()
-        self.retriever = retriever or NullRetriever()
+        self.retriever = retriever or VectorRetriever()
         self.prompt_file = prompt_file or str(_PROMPTS_DIR / "question_system.txt")
 
     async def execute(self, request: QuestionPipelineRequest) -> QuestionPipelineResponse:
