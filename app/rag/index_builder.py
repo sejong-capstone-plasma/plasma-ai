@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import logging
-import re
+import subprocess
+import sys
 from pathlib import Path
 
 import chromadb
@@ -31,6 +33,14 @@ class IndexBuilder:
 
     def build(self) -> None:
         self.index_dir.mkdir(parents=True, exist_ok=True)
+
+        logger.info("Loading embedding model...")
+        sys.stdout.flush()
+        embed_fn = get_embedding_function()
+        embed_fn(["warmup"])
+        logger.info("Embedding model ready.")
+        sys.stdout.flush()
+
         client = chromadb.PersistentClient(path=str(self.index_dir))
 
         existing = [c.name for c in client.list_collections()]
@@ -38,26 +48,43 @@ class IndexBuilder:
             client.delete_collection(self.collection_name)
         collection = client.create_collection(
             self.collection_name,
-            embedding_function=get_embedding_function(),
+            embedding_function=embed_fn,
         )
 
         docs = self._discover_documents()
         logger.info("Found %d documents in %s", len(docs), self.docs_dir)
+        sys.stdout.flush()
 
         total_chunks = 0
         for path in docs:
-            text, metadata = self._load_document(path)
+            logger.info("Processing: %s", path.name)
+            sys.stdout.flush()
+            try:
+                text, metadata = self._load_document(path)
+            except Exception as e:
+                logger.error("  Failed to load %s: %s", path.name, e)
+                sys.stdout.flush()
+                continue
             if not text.strip():
-                logger.warning("Skipping empty document: %s", path.name)
+                logger.warning("  Skipping empty: %s", path.name)
+                sys.stdout.flush()
                 continue
             chunks = self.chunker.chunk(text)
-            collection.add(
-                documents=chunks,
-                metadatas=[{**metadata, "chunk_index": i} for i in range(len(chunks))],
-                ids=[f"{path.name}::chunk_{i}" for i in range(len(chunks))],
-            )
+            logger.info("  %s → %d chunks, embedding...", path.name, len(chunks))
+            sys.stdout.flush()
+            try:
+                collection.add(
+                    documents=chunks,
+                    metadatas=[{**metadata, "chunk_index": i} for i in range(len(chunks))],
+                    ids=[f"{path.name}::chunk_{i}" for i in range(len(chunks))],
+                )
+            except Exception as e:
+                logger.error("  Failed to embed %s: %s", path.name, e)
+                sys.stdout.flush()
+                continue
             total_chunks += len(chunks)
-            logger.info("  %s → %d chunks", path.name, len(chunks))
+            logger.info("  %s → done", path.name)
+            sys.stdout.flush()
 
         logger.info("Index built: %d chunks from %d documents", total_chunks, len(docs))
 
@@ -81,58 +108,43 @@ class IndexBuilder:
                 break
         return text, {"source": str(path), "title": title, "type": "markdown"}
 
+    _MAX_PDF_PAGES = 100
+    _PDF_TIMEOUT = 60
+
     def _load_pdf(self, path: Path) -> tuple[str, dict]:
-        from pypdf import PdfReader
+        data = self._extract_pdf(path)
+        if data is None:
+            return "", {"source": str(path), "title": path.stem, "type": "pdf"}
 
-        reader = PdfReader(str(path))
-        pages = [page.extract_text() or "" for page in reader.pages]
-        text = "\n\n".join(p for p in pages if p.strip())
+        logger.info("  %s: %d pages (read up to %d)", path.name, data["num_pages"], self._MAX_PDF_PAGES)
+        text = "\n\n".join(p for p in data["pages"] if p.strip())
 
-        meta = reader.metadata or {}
-        title = meta.get("/Title") or path.stem
-        raw_author = meta.get("/Author") or ""
-        author = raw_author if self._is_valid_author(raw_author) else None
-
-        first_page = pages[0] if pages else ""
-        doi = self._extract_doi(first_page)
-        year = self._extract_year(meta, doi)
-
-        metadata: dict = {"source": str(path), "title": title, "type": "pdf"}
-        if author:
-            metadata["author"] = author
-        if year:
-            metadata["year"] = year
-        if doi:
-            metadata["doi"] = doi
+        metadata: dict = {
+            "source": str(path),
+            "title": data.get("title") or path.stem,
+            "type": "pdf",
+        }
+        for key in ("author", "year", "doi"):
+            if data.get(key):
+                metadata[key] = data[key]
 
         return text, metadata
 
-    @staticmethod
-    def _is_valid_author(author: str) -> bool:
-        if not author or len(author) < 2 or len(author) > 200:
-            return False
-        # 경로 문자나 날짜 패턴이 포함된 garbage 값 제외
-        if re.search(r"[\\/:*?\"<>|]|\d{4} \w+ \d{2} \d{2}:\d{2}", author):
-            return False
-        return True
-
-    @staticmethod
-    def _extract_doi(text: str) -> str | None:
-        match = re.search(r"10\.\d{4,9}/[^\s\"'<>]+", text)
-        return match.group(0).rstrip(".,;)") if match else None
-
-    @staticmethod
-    def _extract_year(meta: dict, doi: str | None) -> int | None:
-        # PDF 메타데이터의 생성일에서 연도 추출 (형식: D:20230101...)
-        date_str = meta.get("/CreationDate") or meta.get("/ModDate") or ""
-        year_match = re.search(r"(\d{4})", date_str)
-        if year_match:
-            year = int(year_match.group(1))
-            if 1990 <= year <= 2100:
-                return year
-        # DOI에서 연도 힌트 추출 (일부 DOI에 연도 포함)
-        if doi:
-            doi_year = re.search(r"/(19|20)(\d{2})[./]", doi)
-            if doi_year:
-                return int(doi_year.group(1) + doi_year.group(2))
-        return None
+    def _extract_pdf(self, path: Path) -> dict | None:
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "app.rag.pdf_extract", str(path), str(self._MAX_PDF_PAGES)],
+                capture_output=True,
+                text=True,
+                timeout=self._PDF_TIMEOUT,
+            )
+            if result.returncode != 0:
+                logger.warning("  PDF subprocess error: %s", result.stderr[:300])
+                return None
+            return json.loads(result.stdout)
+        except subprocess.TimeoutExpired:
+            logger.warning("  PDF extraction timed out after %ds, skipping", self._PDF_TIMEOUT)
+            return None
+        except Exception as e:
+            logger.warning("  PDF extraction failed: %s", e)
+            return None

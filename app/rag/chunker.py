@@ -48,5 +48,7 @@ class Chunker:
             chunk = text[start:end].strip()
             if chunk:
                 chunks.append(chunk)
+            if end == len(text):
+                break
             start = end - self.overlap
         return chunks
