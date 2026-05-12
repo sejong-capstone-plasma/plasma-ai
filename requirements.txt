@@ -11,6 +11,6 @@ pandas==2.3.3
 joblib==1.5.2
 xgboost
 optuna==4.4.0
-chromadb==1.5.1
+chromadb==0.6.3
 pypdf==5.1.0
 sentence-transformers==3.4.1

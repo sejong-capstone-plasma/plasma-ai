@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
-        chromadb==1.5.1 \
+        chromadb==0.6.3 \
         pypdf==5.1.0 \
         sentence-transformers==3.4.1 \
         pydantic==2.11.7 \
