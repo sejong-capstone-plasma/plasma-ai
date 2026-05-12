@@ -39,7 +39,7 @@ class Chunker:
         if buffer:
             chunks.append(buffer)
 
-        return chunks
+        return [c for c in chunks if not (re.match(r"^#{1,6} ", c) and "\n" not in c)]
 
     def _tail(self, text: str) -> str:
         return text[-self.overlap:].strip() if len(text) > self.overlap else text

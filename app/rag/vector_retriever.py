@@ -13,8 +13,8 @@ class VectorRetriever(BaseRetriever):
         self,
         index_dir: str | None = None,
         collection_name: str | None = None,
-        top_k: int = 10,
-        min_score: float = 0.45,
+        top_k: int = 20,
+        min_score: float = 0.38,
     ) -> None:
         self.index_dir = index_dir or str(settings.rag_index_dir)
         self.collection_name = collection_name or settings.rag_collection_name
