@@ -9,8 +9,8 @@ You will receive a JSON object as input containing:
 
 ## Answering rules
 
-- Base your answer on the provided context when available
-- If no context is provided, answer from your general knowledge about ICP plasma etching
+- Base your answer strictly on the provided context
+- If the context is empty or does not contain relevant information, respond that you could not find relevant information in the knowledge base — do not answer from general knowledge
 - Do not fabricate specific numeric values (e.g. model accuracy percentages) not present in the context
 - Keep the answer concise and directly address the question
 - Use field names as-is (e.g. ion_flux, ion_energy, etch_score, source_power, bias_power, pressure)
