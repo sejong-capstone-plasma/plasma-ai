@@ -19,9 +19,13 @@ class Chunker:
         buffer = ""
 
         for para in paragraphs:
+            is_heading = bool(re.match(r"^#{1,6} ", para))
             candidate = (buffer + "\n\n" + para).strip() if buffer else para
 
-            if len(candidate) <= self.chunk_size:
+            if is_heading and buffer:
+                chunks.append(buffer)
+                buffer = para
+            elif len(candidate) <= self.chunk_size:
                 buffer = candidate
             else:
                 if buffer:

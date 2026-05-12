@@ -13,11 +13,13 @@ class VectorRetriever(BaseRetriever):
         self,
         index_dir: str | None = None,
         collection_name: str | None = None,
-        top_k: int = 5,
+        top_k: int = 10,
+        min_score: float = 0.45,
     ) -> None:
         self.index_dir = index_dir or str(settings.rag_index_dir)
         self.collection_name = collection_name or settings.rag_collection_name
         self.top_k = top_k
+        self.min_score = min_score
         self._collection: chromadb.Collection | None = None
 
     def _get_collection(self) -> chromadb.Collection:
@@ -44,6 +46,8 @@ class VectorRetriever(BaseRetriever):
         output: list[SourceDocument] = []
         for doc, meta, distance in zip(documents, metadatas, distances):
             score = max(0.0, 1.0 - distance)
+            if score < self.min_score:
+                continue
             output.append(
                 SourceDocument(
                     title=meta.get("title", ""),
