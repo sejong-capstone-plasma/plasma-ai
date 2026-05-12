@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
         python-dotenv==1.1.1
 
 # 빌드 시점에 임베딩 모델을 이미지에 포함
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')"
 
 COPY app /workspace/app
 COPY scripts /workspace/scripts

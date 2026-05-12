@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-_MODEL_NAME = "all-MiniLM-L6-v2"
+_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 
 
 def get_embedding_function() -> SentenceTransformerEmbeddingFunction:
