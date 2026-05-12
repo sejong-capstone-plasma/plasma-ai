@@ -9,4 +9,6 @@ data/knowledge/raw/*.pdf
 data/knowledge/raw/papers/
 data/models/
 data/index/
+data/hf_cache/
 .idea/
+.claude
