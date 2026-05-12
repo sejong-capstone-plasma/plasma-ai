@@ -49,6 +49,7 @@ class IndexBuilder:
         collection = client.create_collection(
             self.collection_name,
             embedding_function=embed_fn,
+            metadata={"hnsw:space": "cosine"},
         )
 
         docs = self._discover_documents()
