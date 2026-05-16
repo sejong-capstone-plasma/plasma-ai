@@ -107,17 +107,14 @@ Write 2–3 Korean sentences as a chatbot response summarizing the key result. C
 
 1. The predicted etch_score with a brief qualitative framing (e.g., 어느 정도 수준인지)
 2. The predicted ion_flux and ion_energy values
-3. If current_outputs is not null: note the user-provided etch_rate alongside the predicted score
-   If message history shows a clear etch_score trend: note the direction and magnitude of change instead
+3. If message history shows a clear etch_score trend: note the direction and magnitude of change
 
 All values must be taken directly from the input. Do not repeat the process_params — the user already knows them.
 
-- Example (no history, no current_outputs):
+- Example (no history):
   "입력하신 조건에서 예상 etch score는 {value} {unit}으로 예측됩니다. 예측된 ion_flux는 {ion_flux} {unit}, ion_energy는 {ion_energy} {unit} 수준입니다."
 - Example (with history trend):
   "이전 요청 대비 etch score가 {prior} point에서 {current} point로 상승했습니다. ion_flux {ion_flux} {unit}, ion_energy {ion_energy} {unit} 기준으로 플라즈마 특성도 함께 변화했습니다."
-- Example (with current_outputs):
-  "입력하신 조건에서 예상 etch score는 {value} {unit}으로 예측됩니다. 예측된 ion_flux는 {ion_flux} {unit}, ion_energy는 {ion_energy} {unit}이며, 사용자가 제공한 현재 etch_rate {etch_rate} {unit}과는 별도의 지표입니다."
 
 ## Output constraints
 

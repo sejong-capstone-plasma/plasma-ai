@@ -138,11 +138,10 @@ Write 2–3 Korean sentences as a chatbot response summarizing the optimization 
 1. The baseline etch_score and total number of candidates found
 2. The rank-1 candidate's etch_score and improvement over baseline (increase_value and increase_percent)
 3. If message history shows a clear baseline trend: note the direction and magnitude of change
-   If current_outputs is not null: note that the user-provided etch_rate is a separate reference value
 
 All values must be taken directly from the input. Do not list all candidate params in the summary — that belongs in details.
 
-- Example (no history, no current_outputs):
+- Example (no history):
   "현재 조건의 baseline etch score는 {baseline} {unit}이며, 이를 개선할 수 있는 후보 조건 {count}개를 도출했습니다. 1순위 후보에서 예상 etch score는 {top_score} {unit}으로, baseline 대비 {increase_value} {unit}({increase_percent}%) 향상이 기대됩니다."
 - Example (with history trend):
   "이전 요청 대비 baseline etch score가 {prior} point에서 {current} point로 변화했습니다. 이번 최적화에서는 {count}개의 후보 조건을 도출했으며, 1순위 기준 {top_score} {unit}까지 개선이 가능합니다."
