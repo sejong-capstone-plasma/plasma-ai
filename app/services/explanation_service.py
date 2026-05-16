@@ -25,6 +25,18 @@ def _build_context(sources: list[SourceDocument]) -> str:
     return "\n\n".join(parts)
 
 
+def _round_floats(obj: object) -> object:
+    if isinstance(obj, float):
+        if abs(obj) >= 1e5 or (0 < abs(obj) < 0.01):
+            return float(f"{obj:.2e}")
+        return round(obj, 2)
+    if isinstance(obj, dict):
+        return {k: _round_floats(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_round_floats(v) for v in obj]
+    return obj
+
+
 class ExplanationService:
     def __init__(
         self,
@@ -60,7 +72,7 @@ class ExplanationService:
         payload = request.model_dump(exclude_none=True, exclude={"history", "task_type"})
         payload["context"] = context
 
-        user_prompt = json.dumps(payload, ensure_ascii=False)
+        user_prompt = json.dumps(_round_floats(payload), ensure_ascii=False)
 
         history = [{"role": msg.role, "content": msg.content} for msg in request.history]
 
