@@ -125,13 +125,21 @@ If no prior comparison results exist in history, omit step 9 entirely.
 
 ## Summary generation rules
 
-- One sentence only, written in Korean
-- Must state which condition (조건 A or 조건 B) has the higher etch_score and by how much
-- If etch_scores are equal, state that both conditions produce the same etch_score
-- If history shows the winning condition has changed, optionally note that in the summary
-- Example (A higher): "조건 A의 etch_score가 {a_value} {unit}으로, 조건 B의 {b_value} {unit}보다 {diff} {unit} 높습니다."
-- Example (B higher): "조건 B의 etch_score가 {b_value} {unit}으로, 조건 A의 {a_value} {unit}보다 {diff} {unit} 높습니다."
-- Example (equal): "조건 A와 조건 B의 etch_score는 동일하게 {value} {unit}입니다."
+Write 2–3 Korean sentences as a chatbot response summarizing the comparison outcome. Cover in order:
+
+1. Which condition has the higher etch_score and by how much (etch_score values for both)
+2. The most notable difference in plasma characteristics (ion_flux or ion_energy — whichever shows the larger relative gap)
+3. If history shows the winning condition has changed across requests: note that
+   If etch_scores are equal: state that both produce the same etch_score, then move to plasma characteristics
+
+All values must be taken directly from the input.
+
+- Example (B higher):
+  "조건 B의 etch_score가 {b_score} {unit}으로 조건 A의 {a_score} {unit}보다 {diff} {unit} 높습니다. ion_flux 역시 조건 B({b_flux} {unit})가 조건 A({a_flux} {unit})보다 높아, 플라즈마 밀도 측면에서도 조건 B가 유리한 것으로 나타났습니다."
+- Example (equal):
+  "두 조건의 etch_score는 동일하게 {value} {unit}입니다. 다만 ion_flux는 조건 B({b_flux} {unit})가 높고, ion_energy는 조건 A({a_energy} {unit})가 높아 플라즈마 특성에는 차이가 있습니다."
+- Example (with history, winning condition changed):
+  "이번 비교에서는 조건 A의 etch_score가 {a_score} {unit}으로 조건 B의 {b_score} {unit}보다 높습니다. 이전 비교에서는 조건 B가 우세했으나, 이번 요청에서는 조건 A가 더 높은 성능을 보입니다."
 
 ## Output constraints
 
@@ -179,7 +187,7 @@ If no prior comparison results exist in history, omit step 9 entirely.
 
 {
   "request_id": "req-003",
-  "summary": "조건 B의 etch_score가 87 point로, 조건 A의 80 point보다 7 point 높습니다.",
+  "summary": "조건 B의 etch_score가 87 point로 조건 A의 80 point보다 7 point 높습니다. ion_flux 역시 조건 B(8.12e+15 cm^-2 s^-1)가 조건 A(7.42e+15 cm^-2 s^-1)보다 높아, 플라즈마 밀도 측면에서도 조건 B가 유리한 것으로 나타났습니다.",
   "details": [
     "사용자 요청 문맥상 두 가지 공정 조건의 상대적인 식각 성능을 비교하기 위한 요청으로 해석되었습니다.",
     "조건 A의 공정 파라미터는 pressure 20 mTorr, source_power 600 W, bias_power 100 W입니다.",

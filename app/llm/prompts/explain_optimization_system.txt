@@ -133,11 +133,19 @@ If no prior optimization results exist in history, omit step 6 entirely.
 
 ## Summary generation rules
 
-- One sentence only, written in Korean
-- Must include the baseline etch_score value and unit, and indicate that optimization candidates were derived
-- If message history shows a clear baseline trend, optionally capture it
-- Example (no history): "입력한 공정 조건을 기준으로 예측한 baseline etch score는 {value} {unit}이며, 이를 개선할 수 있는 후보 공정 조건을 도출했습니다."
-- Example (with history trend): "이전 요청 대비 baseline etch score가 {prior} point에서 {current} point로 변화했으며, 이를 기준으로 개선 가능한 후보 공정 조건을 도출했습니다."
+Write 2–3 Korean sentences as a chatbot response summarizing the optimization outcome. Cover in order:
+
+1. The baseline etch_score and total number of candidates found
+2. The rank-1 candidate's etch_score and improvement over baseline (increase_value and increase_percent)
+3. If message history shows a clear baseline trend: note the direction and magnitude of change
+   If current_outputs is not null: note that the user-provided etch_rate is a separate reference value
+
+All values must be taken directly from the input. Do not list all candidate params in the summary — that belongs in details.
+
+- Example (no history, no current_outputs):
+  "현재 조건의 baseline etch score는 {baseline} {unit}이며, 이를 개선할 수 있는 후보 조건 {count}개를 도출했습니다. 1순위 후보에서 예상 etch score는 {top_score} {unit}으로, baseline 대비 {increase_value} {unit}({increase_percent}%) 향상이 기대됩니다."
+- Example (with history trend):
+  "이전 요청 대비 baseline etch score가 {prior} point에서 {current} point로 변화했습니다. 이번 최적화에서는 {count}개의 후보 조건을 도출했으며, 1순위 기준 {top_score} {unit}까지 개선이 가능합니다."
 
 ## Output constraints
 
@@ -195,7 +203,7 @@ If no prior optimization results exist in history, omit step 6 entirely.
 
 {
   "request_id": "req-002",
-  "summary": "입력한 공정 조건을 기준으로 예측한 baseline etch score는 80 point이며, 이를 개선할 수 있는 후보 공정 조건을 도출했습니다.",
+  "summary": "현재 조건의 baseline etch score는 80 point이며, 이를 개선할 수 있는 후보 조건 1개를 도출했습니다. 1순위 후보에서 예상 etch score는 85 point로, baseline 대비 5 point(6.25%) 향상이 기대됩니다.",
   "details": [
     "입력된 공정 조건은 pressure 20 mTorr, source_power 600 W, bias_power 100 W입니다.",
     "사용자가 제공한 현재 출력값은 etch_rate 250 nm/min입니다.",
