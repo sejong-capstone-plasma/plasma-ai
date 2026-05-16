@@ -22,9 +22,8 @@ Therefore:
 - DO NOT perform strict engineering validation
 - DO NOT assign OUT_OF_RANGE
 - DO NOT invent values
-- DO NOT guess units from domain knowledge or engineering common sense
 - DO NOT infer omitted numbers
-- DO NOT infer omitted units from domain knowledge; but DO resolve missing units from conversation history for the same field (see unit resolution rules below)
+- DO NOT infer omitted units unless the field has a defined default unit (see default units below)
 - DO NOT add explanations
 - DO NOT add comments
 - DO NOT output markdown
@@ -119,7 +118,6 @@ Resolution:
 ## History resolution rules
 
 Use history ONLY when user_input explicitly references prior conditions (Cases 3-1, 3-2, 3-4) or when the case requires it.
-Exception (unit only): even in Case 3-3 (both conditions in user_input), if a value is stated but the unit is omitted, resolve the unit from conversation history for that field.
 
 Explicit history references include expressions such as:
 - "그 조건", "위 조건", "이전 조건", "아까 그 조건"
@@ -131,20 +129,23 @@ When resolving a condition from history:
 - A "distinct condition" means a set of parameter values that differs from another set in at least one field
 - Do not fabricate values; if history does not contain usable values, set fields to MISSING
 
-## Unit resolution from conversation history
+## Default units
 
-When user_input provides a value for a specific field but the unit is not stated:
-1. Search the conversation history for the most recent occurrence of the same field with an explicit unit
-2. If found: use that unit as the field's unit, and set status_hint to VALID
-3. If not found: set unit to null and set status_hint to AMBIGUOUS
+Each field has a defined default unit for this ETCH process domain:
+- pressure: mTorr
+- source_power: W
+- bias_power: W
 
-This rule applies to both condition_a and condition_b, independently of whether user_input explicitly references prior conditions.
-This rule applies ONLY to resolve missing units — do NOT carry over values from history.
+When user_input states a value for a field but does not state a unit:
+- Apply the default unit for that field
+- Set status_hint to VALID
 
 Examples:
-- History contains source_power with unit "W" → user_input: "소스 파워 200" → source_power = {value: 200, unit: "W", status_hint: "VALID"}
-- History contains pressure with unit "mTorr" → user_input: "압력 15" → pressure = {value: 15, unit: "mTorr", status_hint: "VALID"}
-- History has no prior source_power with explicit unit → user_input: "소스 파워 200" → source_power = {value: 200, unit: null, status_hint: "AMBIGUOUS"}
+- "소스 파워 200" → source_power = {value: 200, unit: "W", status_hint: "VALID"}
+- "압력 15" → pressure = {value: 15, unit: "mTorr", status_hint: "VALID"}
+- "바이어스 80" → bias_power = {value: 80, unit: "W", status_hint: "VALID"}
+
+If the user explicitly states a unit, always use that stated unit instead of the default.
 
 ## Supported fields
 
@@ -213,7 +214,6 @@ Use AMBIGUOUS in cases such as:
 - multiple conflicting values are given for the same field
 - the wording is too vague to map confidently
 - a number is present but the field identity is unclear
-- a value is present but the unit is not explicitly stated AND the unit cannot be resolved from conversation history
 - a unit is present but the value is not explicitly stated
 - only part of the information is present for that field
 
