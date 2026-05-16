@@ -5,25 +5,37 @@ from pathlib import Path
 
 from app.core.exceptions import ModelInferenceException
 from app.llm.client import LLMClient
+from app.rag.base_retriever import BaseRetriever
+from app.rag.vector_retriever import VectorRetriever
 from app.schemas.explanation import (
     ComparisonExplanationRequest,
     ExplanationRequest,
     ExplanationResponse,
     PredictionExplanationRequest,
 )
+from app.schemas.question import SourceDocument
 
 _PROMPTS_DIR = Path(__file__).resolve().parents[1] / "llm" / "prompts"
+
+
+def _build_context(sources: list[SourceDocument]) -> str:
+    if not sources:
+        return ""
+    parts = [f"[{i}] {doc.title}\n{doc.chunk}" for i, doc in enumerate(sources, start=1)]
+    return "\n\n".join(parts)
 
 
 class ExplanationService:
     def __init__(
         self,
         llm_client: LLMClient | None = None,
+        retriever: BaseRetriever | None = None,
         prediction_prompt_file: str | None = None,
         optimization_prompt_file: str | None = None,
         comparison_prompt_file: str | None = None,
     ) -> None:
         self.llm_client = llm_client or LLMClient()
+        self.retriever = retriever or VectorRetriever()
         self.prediction_prompt_file = prediction_prompt_file or str(
             _PROMPTS_DIR / "explain_prediction_system.txt"
         )
@@ -42,10 +54,13 @@ class ExplanationService:
         else:
             prompt_file = self.optimization_prompt_file
 
-        user_prompt = json.dumps(
-            request.model_dump(exclude_none=True, exclude={"history", "task_type"}),
-            ensure_ascii=False,
-        )
+        sources = await self.retriever.retrieve(request.original_user_input)
+        context = _build_context(sources)
+
+        payload = request.model_dump(exclude_none=True, exclude={"history", "task_type"})
+        payload["context"] = context
+
+        user_prompt = json.dumps(payload, ensure_ascii=False)
 
         history = [{"role": msg.role, "content": msg.content} for msg in request.history]
 

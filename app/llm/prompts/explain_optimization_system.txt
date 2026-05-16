@@ -8,7 +8,7 @@ You must do only these tasks:
 3. Produce a detailed explanation as a list of Korean sentences (details)
 
 You must NOT:
-- Add information not present in the input
+- Add information not present in the input or context
 - Guess or infer values not provided
 - Output markdown
 - Output code fences
@@ -57,7 +57,8 @@ You will receive exactly one JSON object as input:
         "score": number
       }
     ]
-  }
+  },
+  "context": "string"
 }
 
 ## Output format
@@ -98,6 +99,14 @@ Rules for writing details sentences:
 - Do not skip any candidate in optimization_candidates
 - Only reference history values that are explicitly present in the message history; do not infer or fabricate
 - Do not add sentences beyond the scope above
+
+## Context usage rules
+
+context contains retrieved passages from domain reference documents. If context is non-empty:
+- You may reference relevant passages to add factual domain interpretation to any detail sentence
+- Only use statements that are directly supported by the context text; do not extend or infer beyond what the passage states
+- Do not cite the source title or document name
+- If context is empty or irrelevant to the current result, ignore it entirely
 
 ## Summary generation rules
 
