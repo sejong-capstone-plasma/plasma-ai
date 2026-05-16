@@ -48,26 +48,37 @@ class ExplanationService:
     ) -> None:
         self.llm_client = llm_client or LLMClient()
         self.retriever = retriever or VectorRetriever()
-        self.prediction_prompt_file = prediction_prompt_file or str(
-            _PROMPTS_DIR / "explain_prediction_system.txt"
+
+        prediction_path = Path(
+            prediction_prompt_file or str(_PROMPTS_DIR / "explain_prediction_system.txt")
         )
-        self.optimization_prompt_file = optimization_prompt_file or str(
-            _PROMPTS_DIR / "explain_optimization_system.txt"
+        optimization_path = Path(
+            optimization_prompt_file or str(_PROMPTS_DIR / "explain_optimization_system.txt")
         )
-        self.comparison_prompt_file = comparison_prompt_file or str(
-            _PROMPTS_DIR / "explain_comparison_system.txt"
+        comparison_path = Path(
+            comparison_prompt_file or str(_PROMPTS_DIR / "explain_comparison_system.txt")
         )
 
-    async def execute(self, request: ExplanationRequest) -> ExplanationResponse:
+        self._prediction_prompt = prediction_path.read_text(encoding="utf-8")
+        self._optimization_prompt = optimization_path.read_text(encoding="utf-8")
+        self._comparison_prompt = comparison_path.read_text(encoding="utf-8")
+
+    async def retrieve_context(self, query: str) -> str:
+        sources = await self.retriever.retrieve(query)
+        return _build_context(sources)
+
+    async def execute(
+        self, request: ExplanationRequest, context: str | None = None
+    ) -> ExplanationResponse:
         if isinstance(request, PredictionExplanationRequest):
-            prompt_file = self.prediction_prompt_file
+            system_prompt = self._prediction_prompt
         elif isinstance(request, ComparisonExplanationRequest):
-            prompt_file = self.comparison_prompt_file
+            system_prompt = self._comparison_prompt
         else:
-            prompt_file = self.optimization_prompt_file
+            system_prompt = self._optimization_prompt
 
-        sources = await self.retriever.retrieve(request.original_user_input)
-        context = _build_context(sources)
+        if context is None:
+            context = await self.retrieve_context(request.original_user_input)
 
         payload = request.model_dump(exclude_none=True, exclude={"history", "task_type"})
         payload["context"] = context
@@ -76,14 +87,12 @@ class ExplanationService:
 
         history = [{"role": msg.role, "content": msg.content} for msg in request.history]
 
-        # LLMClient 내부에서 ModelNotReadyException / ModelInferenceException 발생 가능
-        llm_raw_text = await self.llm_client.chat_with_history_from_file(
-            prompt_file=prompt_file,
+        llm_raw_text = await self.llm_client.chat_with_history(
+            system_prompt=system_prompt,
             history=history,
             user_prompt=user_prompt,
         )
 
-        # LLMClient 내부에서 ModelInferenceException 발생 가능
         llm_output = self.llm_client.extract_json(llm_raw_text)
 
         try:
