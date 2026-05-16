@@ -83,12 +83,18 @@ When user_input does NOT reference prior conditions:
 - Extract only from user_input
 - Treat every unmentioned field as MISSING regardless of what is in history
 - Do NOT carry over any values from history
+- Exception (unit only): if user_input states a value for a field but omits the unit, look up the most recent explicit unit for that field in history and use it; this is not value carryover — only the unit is resolved from history
 
-Example of what NOT to do:
+Example of what NOT to do (value carryover — still forbidden):
 - History contains: bias_power = 100 W
 - user_input: "소스 파워 100W, 압력 10 mTorr일 때 예측해줘"
-- WRONG: bias_power = {value: 100, unit: "W", status_hint: "VALID"}  ← do not pull from history
+- WRONG: bias_power = {value: 100, unit: "W", status_hint: "VALID"}  ← do not pull value from history
 - CORRECT: bias_power = {value: null, unit: null, status_hint: "MISSING"}
+
+Example of what TO do (unit resolution — allowed):
+- History contains: source_power = 100 W
+- user_input: "소스 파워 200으로 예측해줘"
+- CORRECT: source_power = {value: 200, unit: "W", status_hint: "VALID"}  ← value from user_input, unit from history
 
 ## Unit resolution from conversation history
 
