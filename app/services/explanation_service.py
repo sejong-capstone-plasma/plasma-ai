@@ -6,6 +6,7 @@ from pathlib import Path
 from app.core.exceptions import ModelInferenceException
 from app.llm.client import LLMClient
 from app.schemas.explanation import (
+    ComparisonExplanationRequest,
     ExplanationRequest,
     ExplanationResponse,
     PredictionExplanationRequest,
@@ -20,6 +21,7 @@ class ExplanationService:
         llm_client: LLMClient | None = None,
         prediction_prompt_file: str | None = None,
         optimization_prompt_file: str | None = None,
+        comparison_prompt_file: str | None = None,
     ) -> None:
         self.llm_client = llm_client or LLMClient()
         self.prediction_prompt_file = prediction_prompt_file or str(
@@ -28,22 +30,29 @@ class ExplanationService:
         self.optimization_prompt_file = optimization_prompt_file or str(
             _PROMPTS_DIR / "explain_optimization_system.txt"
         )
-
-    async def execute(self, request: ExplanationRequest) -> ExplanationResponse:
-        prompt_file = (
-            self.prediction_prompt_file
-            if isinstance(request, PredictionExplanationRequest)
-            else self.optimization_prompt_file
+        self.comparison_prompt_file = comparison_prompt_file or str(
+            _PROMPTS_DIR / "explain_comparison_system.txt"
         )
 
+    async def execute(self, request: ExplanationRequest) -> ExplanationResponse:
+        if isinstance(request, PredictionExplanationRequest):
+            prompt_file = self.prediction_prompt_file
+        elif isinstance(request, ComparisonExplanationRequest):
+            prompt_file = self.comparison_prompt_file
+        else:
+            prompt_file = self.optimization_prompt_file
+
         user_prompt = json.dumps(
-            request.model_dump(exclude_none=True),
+            request.model_dump(exclude_none=True, exclude={"history", "task_type"}),
             ensure_ascii=False,
         )
 
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
         # LLMClient 내부에서 ModelNotReadyException / ModelInferenceException 발생 가능
-        llm_raw_text = await self.llm_client.chat_from_file(
+        llm_raw_text = await self.llm_client.chat_with_history_from_file(
             prompt_file=prompt_file,
+            history=history,
             user_prompt=user_prompt,
         )
 

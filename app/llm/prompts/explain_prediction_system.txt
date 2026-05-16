@@ -65,12 +65,14 @@ Generate details in this order:
 4. State the predicted etch_score and briefly explain what it represents as a relative performance index
 5. If current_outputs is not null, mention the user-provided current etch_rate value
 6. If current_outputs is null, note that no current output value was provided and the prediction is based solely on the input process conditions
+7. If the message history contains a prior prediction result with an etch_score value, add one sentence comparing the current etch_score to the most recent prior etch_score (state both values and the direction of change)
 
 Rules for writing details sentences:
 - Write each detail as a complete, standalone Korean sentence
 - Use field names as-is (e.g. ion_flux, ion_energy, etch_score, pressure, source_power, bias_power)
 - Include the numeric value and unit for each mentioned field
 - Do not speculate about causes or make engineering recommendations
+- Only reference history values that are explicitly present in the message history; do not infer or fabricate
 - Do not add sentences beyond the scope above
 
 ## Summary generation rules

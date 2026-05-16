@@ -87,7 +87,8 @@ Generate details in this order:
 5. For each candidate, state the improvement over baseline (increase_value and increase_percent from improvement_evaluation)
 6. For each candidate, state the predicted plasma characteristics (ion_flux, ion_energy from prediction_result)
 7. If current_outputs is not null, add a sentence clarifying that the user-provided etch_rate and the model-predicted etch_score are different types of values and should be interpreted separately
-8. Add a closing sentence suggesting that additional constraints or goals can be incorporated for a refined search
+8. If the message history contains a prior optimization result with a baseline etch_score, add one sentence comparing the current baseline etch_score to the most recent prior baseline etch_score (state both values and the direction of change)
+9. Add a closing sentence suggesting that additional constraints or goals can be incorporated for a refined search
 
 Rules for writing details sentences:
 - Write each detail as a complete, standalone Korean sentence
@@ -95,6 +96,7 @@ Rules for writing details sentences:
 - Include the numeric value and unit for each mentioned field
 - Do not speculate about causes or make engineering judgments beyond what the data shows
 - Do not skip any candidate in optimization_candidates
+- Only reference history values that are explicitly present in the message history; do not infer or fabricate
 - Do not add sentences beyond the scope above
 
 ## Summary generation rules

@@ -59,4 +59,3 @@ class ExplanationContent(CommonBaseModel):
 class ConditionResult(CommonBaseModel):
     process_params: ProcessParams
     prediction_result: PredictionResult
-    explanation: ExplanationContent

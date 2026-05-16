@@ -1,5 +1,3 @@
-import asyncio
-
 from app.schemas.common import ConditionResult, ExplanationContent
 from app.schemas.pipelines import (
     ComparisonPipelineRequest,
@@ -13,6 +11,8 @@ from app.schemas.pipelines import (
     QuestionPipelineResponse,
 )
 from app.schemas.explanation import (
+    ComparisonConditionData,
+    ComparisonExplanationRequest,
     OptimizationExplanationRequest,
     PredictionExplanationRequest,
 )
@@ -71,6 +71,7 @@ class AnalysisOrchestrator:
             process_type=request.process_type,
             process_params=request.process_params,
             prediction_result=predict_response.prediction_result,
+            history=request.history,
         )
         explanation_response = await self.explanation_service.execute(explanation_request)
 
@@ -104,6 +105,7 @@ class AnalysisOrchestrator:
             current_outputs=request.current_outputs,
             baseline_outputs=optimization_response.baseline_outputs,
             optimization_result=optimization_response.optimization_result,
+            history=request.history,
         )
         explanation_response = await self.explanation_service.execute(explanation_request)
 
@@ -137,27 +139,22 @@ class AnalysisOrchestrator:
             )
         )
 
-        explanation_response_a, explanation_response_b = await asyncio.gather(
-            self.explanation_service.execute(
-                PredictionExplanationRequest(
-                    request_id=request.request_id,
-                    original_user_input=request.original_user_input,
-                    task_type="PREDICTION",
-                    process_type=request.process_type,
+        comparison_explanation_response = await self.explanation_service.execute(
+            ComparisonExplanationRequest(
+                request_id=request.request_id,
+                original_user_input=request.original_user_input,
+                task_type="COMPARISON",
+                process_type=request.process_type,
+                condition_a=ComparisonConditionData(
                     process_params=request.condition_a,
                     prediction_result=predict_response_a.prediction_result,
-                )
-            ),
-            self.explanation_service.execute(
-                PredictionExplanationRequest(
-                    request_id=request.request_id,
-                    original_user_input=request.original_user_input,
-                    task_type="PREDICTION",
-                    process_type=request.process_type,
+                ),
+                condition_b=ComparisonConditionData(
                     process_params=request.condition_b,
                     prediction_result=predict_response_b.prediction_result,
-                )
-            ),
+                ),
+                history=request.history,
+            )
         )
 
         return ComparisonPipelineResponse(
@@ -166,18 +163,14 @@ class AnalysisOrchestrator:
             condition_a=ConditionResult(
                 process_params=request.condition_a,
                 prediction_result=predict_response_a.prediction_result,
-                explanation=ExplanationContent(
-                    summary=explanation_response_a.summary,
-                    details=explanation_response_a.details,
-                ),
             ),
             condition_b=ConditionResult(
                 process_params=request.condition_b,
                 prediction_result=predict_response_b.prediction_result,
-                explanation=ExplanationContent(
-                    summary=explanation_response_b.summary,
-                    details=explanation_response_b.details,
-                ),
+            ),
+            explanation=ExplanationContent(
+                summary=comparison_explanation_response.summary,
+                details=comparison_explanation_response.details,
             ),
         )
     
