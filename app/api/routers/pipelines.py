@@ -10,6 +10,8 @@ from app.schemas.pipelines import (
     OptimizationPipelineResponse,
     PredictionPipelineRequest,
     PredictionPipelineResponse,
+    QuestionPipelineRequest,
+    QuestionPipelineResponse,
 )
 
 router = APIRouter()
@@ -34,3 +36,8 @@ async def run_optimize(request: OptimizationPipelineRequest) -> OptimizationPipe
 @router.post("/compare", response_model=ComparisonPipelineResponse)
 async def run_compare(request: ComparisonPipelineRequest) -> ComparisonPipelineResponse:
     return await analysis_orchestrator.run_comparison_pipeline(request)
+
+
+@router.post("/question", response_model=QuestionPipelineResponse)
+async def run_question(request: QuestionPipelineRequest) -> QuestionPipelineResponse:
+    return await analysis_orchestrator.run_question_pipeline(request)

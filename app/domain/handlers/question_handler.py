@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.core.enums import ProcessType, TaskType
+from app.core.enums import ProcessType, TaskType, ValidationStatus
 from app.domain.handlers.base import BaseTaskHandler
 from app.schemas.extract import ExtractParametersRequest, ExtractParametersResponse
 
@@ -9,7 +9,8 @@ class QuestionHandler(BaseTaskHandler):
     """
     Handles QUESTION task.
 
-    Note: not yet implemented — returns UNSUPPORTED.
+    No parameter extraction needed — questions are answered directly by the
+    downstream pipeline using the original user input and conversation history.
     """
 
     async def execute(
@@ -20,4 +21,11 @@ class QuestionHandler(BaseTaskHandler):
         task_type: TaskType,
         process_type: ProcessType,
     ) -> ExtractParametersResponse:
-        return self._unsupported_response(request.request_id, task_type, process_type)
+        return ExtractParametersResponse(
+            request_id=request.request_id,
+            validation_status=ValidationStatus.VALID,
+            task_type=task_type,
+            process_type=process_type,
+            process_params=None,
+            current_outputs=None,
+        )

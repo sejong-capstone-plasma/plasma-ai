@@ -9,6 +9,9 @@ services:
       APP_ENV: prod
     env_file:
       - ../.env.prod
+    volumes:
+      - ../data/index:/workspace/data/index
+      - ../data/hf_cache:/root/.cache/huggingface:ro
     depends_on:
       ai-vllm:
         condition: service_healthy
