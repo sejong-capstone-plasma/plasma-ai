@@ -12,6 +12,13 @@ from app.schemas.common import (
 )
 
 
+_FIELD_DEFAULT_UNITS: dict[str, str] = {
+    "pressure": "mTorr",
+    "source_power": "W",
+    "bias_power": "W",
+}
+
+
 class LLMExtractionParser:
     def parse(
         self,
@@ -43,9 +50,9 @@ class LLMExtractionParser:
 
         return {
             "process_params": ValidatedProcessParams(
-                pressure=self._parse_process_field(process_params_raw.get("pressure")),
-                source_power=self._parse_process_field(process_params_raw.get("source_power")),
-                bias_power=self._parse_process_field(process_params_raw.get("bias_power")),
+                pressure=self._parse_process_field(process_params_raw.get("pressure"), "pressure"),
+                source_power=self._parse_process_field(process_params_raw.get("source_power"), "source_power"),
+                bias_power=self._parse_process_field(process_params_raw.get("bias_power"), "bias_power"),
             ),
             "current_outputs": self._parse_current_outputs(current_outputs_raw),
         }
@@ -61,7 +68,7 @@ class LLMExtractionParser:
             return FieldStatus.OUT_OF_RANGE
         return FieldStatus.AMBIGUOUS
 
-    def _parse_process_field(self, raw: Any) -> ValidatedValueWithUnit:
+    def _parse_process_field(self, raw: Any, field_name: str | None = None) -> ValidatedValueWithUnit:
         if not isinstance(raw, dict):
             return ValidatedValueWithUnit(
                 value=None,
@@ -76,6 +83,9 @@ class LLMExtractionParser:
 
         if value is None and unit is None:
             status = FieldStatus.MISSING
+        elif unit is None and value is not None and field_name in _FIELD_DEFAULT_UNITS:
+            unit = _FIELD_DEFAULT_UNITS[field_name]
+            status = FieldStatus.VALID
         elif unit is None:
             status = FieldStatus.AMBIGUOUS
         elif value is None:
@@ -136,14 +146,14 @@ class LLMExtractionParser:
 
         return {
             "condition_a": ValidatedProcessParams(
-                pressure=self._parse_process_field(condition_a_raw.get("pressure")),
-                source_power=self._parse_process_field(condition_a_raw.get("source_power")),
-                bias_power=self._parse_process_field(condition_a_raw.get("bias_power")),
+                pressure=self._parse_process_field(condition_a_raw.get("pressure"), "pressure"),
+                source_power=self._parse_process_field(condition_a_raw.get("source_power"), "source_power"),
+                bias_power=self._parse_process_field(condition_a_raw.get("bias_power"), "bias_power"),
             ),
             "condition_b": ValidatedProcessParams(
-                pressure=self._parse_process_field(condition_b_raw.get("pressure")),
-                source_power=self._parse_process_field(condition_b_raw.get("source_power")),
-                bias_power=self._parse_process_field(condition_b_raw.get("bias_power")),
+                pressure=self._parse_process_field(condition_b_raw.get("pressure"), "pressure"),
+                source_power=self._parse_process_field(condition_b_raw.get("source_power"), "source_power"),
+                bias_power=self._parse_process_field(condition_b_raw.get("bias_power"), "bias_power"),
             ),
         }    
 
