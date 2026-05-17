@@ -13,6 +13,8 @@ from app.schemas.pipelines import (
     QuestionPipelineResponse,
 )
 from app.schemas.explanation import (
+    ComparisonConditionData,
+    ComparisonExplanationRequest,
     OptimizationExplanationRequest,
     PredictionExplanationRequest,
 )
@@ -62,17 +64,30 @@ class AnalysisOrchestrator:
             process_type=request.process_type,
             process_params=request.process_params,
         )
-        predict_response: PredictResponse = self.predict_service.execute(predict_request)
 
-        explanation_request = PredictionExplanationRequest(
-            request_id=request.request_id,
-            original_user_input=request.original_user_input,
-            task_type="PREDICTION",
-            process_type=request.process_type,
-            process_params=request.process_params,
-            prediction_result=predict_response.prediction_result,
+        predict_response, context = await asyncio.gather(
+            asyncio.to_thread(self.predict_service.execute, predict_request),
+            self.explanation_service.retrieve_context(request.original_user_input),
         )
-        explanation_response = await self.explanation_service.execute(explanation_request)
+
+        explanation_response = await self.explanation_service.execute(
+            PredictionExplanationRequest(
+                request_id=request.request_id,
+                original_user_input=request.original_user_input,
+                task_type="PREDICTION",
+                process_type=request.process_type,
+                process_params=request.process_params,
+                prediction_result=predict_response.prediction_result,
+                history=request.history,
+            ),
+            context=context,
+        )
+
+        details: dict = {
+            "process_params": request.process_params.model_dump(),
+            "prediction_result": predict_response.prediction_result.model_dump(),
+            "interpretation": explanation_response.interpretation,
+        }
 
         return PredictionPipelineResponse(
             request_id=predict_response.request_id,
@@ -80,7 +95,7 @@ class AnalysisOrchestrator:
             prediction_result=predict_response.prediction_result,
             explanation=ExplanationContent(
                 summary=explanation_response.summary,
-                details=explanation_response.details,
+                details=details,
             ),
         )
 
@@ -93,19 +108,32 @@ class AnalysisOrchestrator:
             process_type=request.process_type,
             process_params=request.process_params,
         )
-        optimization_response: OptimizeResponse = await self.optimize_service.execute(optimize_request)
 
-        explanation_request = OptimizationExplanationRequest(
-            request_id=request.request_id,
-            original_user_input=request.original_user_input,
-            task_type="OPTIMIZATION",
-            process_type=request.process_type,
-            process_params=request.process_params,
-            current_outputs=request.current_outputs,
-            baseline_outputs=optimization_response.baseline_outputs,
-            optimization_result=optimization_response.optimization_result,
+        optimization_response, context = await asyncio.gather(
+            self.optimize_service.execute(optimize_request),
+            self.explanation_service.retrieve_context(request.original_user_input),
         )
-        explanation_response = await self.explanation_service.execute(explanation_request)
+
+        explanation_response = await self.explanation_service.execute(
+            OptimizationExplanationRequest(
+                request_id=request.request_id,
+                original_user_input=request.original_user_input,
+                task_type="OPTIMIZATION",
+                process_type=request.process_type,
+                process_params=request.process_params,
+                baseline_outputs=optimization_response.baseline_outputs,
+                optimization_result=optimization_response.optimization_result,
+                history=request.history,
+            ),
+            context=context,
+        )
+
+        details: dict = {
+            "process_params": request.process_params.model_dump(),
+            "baseline_outputs": optimization_response.baseline_outputs.model_dump(),
+            "optimization_result": optimization_response.optimization_result.model_dump(),
+            "interpretation": explanation_response.interpretation,
+        }
 
         return OptimizationPipelineResponse(
             request_id=request.request_id,
@@ -114,7 +142,7 @@ class AnalysisOrchestrator:
             optimization_result=optimization_response.optimization_result,
             explanation=ExplanationContent(
                 summary=explanation_response.summary,
-                details=explanation_response.details,
+                details=details,
             ),
         )
 
@@ -122,43 +150,56 @@ class AnalysisOrchestrator:
         self,
         request: ComparisonPipelineRequest,
     ) -> ComparisonPipelineResponse:
-        predict_response_a: PredictResponse = self.predict_service.execute(
-            PredictRequest(
-                request_id=request.request_id,
-                process_type=request.process_type,
-                process_params=request.condition_a,
-            )
-        )
-        predict_response_b: PredictResponse = self.predict_service.execute(
-            PredictRequest(
-                request_id=request.request_id,
-                process_type=request.process_type,
-                process_params=request.condition_b,
-            )
-        )
-
-        explanation_response_a, explanation_response_b = await asyncio.gather(
-            self.explanation_service.execute(
-                PredictionExplanationRequest(
+        predict_response_a, predict_response_b, context = await asyncio.gather(
+            asyncio.to_thread(
+                self.predict_service.execute,
+                PredictRequest(
                     request_id=request.request_id,
-                    original_user_input=request.original_user_input,
-                    task_type="PREDICTION",
                     process_type=request.process_type,
                     process_params=request.condition_a,
-                    prediction_result=predict_response_a.prediction_result,
-                )
+                ),
             ),
-            self.explanation_service.execute(
-                PredictionExplanationRequest(
+            asyncio.to_thread(
+                self.predict_service.execute,
+                PredictRequest(
                     request_id=request.request_id,
-                    original_user_input=request.original_user_input,
-                    task_type="PREDICTION",
                     process_type=request.process_type,
                     process_params=request.condition_b,
-                    prediction_result=predict_response_b.prediction_result,
-                )
+                ),
             ),
+            self.explanation_service.retrieve_context(request.original_user_input),
         )
+
+        explanation_response = await self.explanation_service.execute(
+            ComparisonExplanationRequest(
+                request_id=request.request_id,
+                original_user_input=request.original_user_input,
+                task_type="COMPARISON",
+                process_type=request.process_type,
+                condition_a=ComparisonConditionData(
+                    process_params=request.condition_a,
+                    prediction_result=predict_response_a.prediction_result,
+                ),
+                condition_b=ComparisonConditionData(
+                    process_params=request.condition_b,
+                    prediction_result=predict_response_b.prediction_result,
+                ),
+                history=request.history,
+            ),
+            context=context,
+        )
+
+        details: dict = {
+            "condition_a": {
+                "process_params": request.condition_a.model_dump(),
+                "prediction_result": predict_response_a.prediction_result.model_dump(),
+            },
+            "condition_b": {
+                "process_params": request.condition_b.model_dump(),
+                "prediction_result": predict_response_b.prediction_result.model_dump(),
+            },
+            "interpretation": explanation_response.interpretation,
+        }
 
         return ComparisonPipelineResponse(
             request_id=request.request_id,
@@ -166,21 +207,17 @@ class AnalysisOrchestrator:
             condition_a=ConditionResult(
                 process_params=request.condition_a,
                 prediction_result=predict_response_a.prediction_result,
-                explanation=ExplanationContent(
-                    summary=explanation_response_a.summary,
-                    details=explanation_response_a.details,
-                ),
             ),
             condition_b=ConditionResult(
                 process_params=request.condition_b,
                 prediction_result=predict_response_b.prediction_result,
-                explanation=ExplanationContent(
-                    summary=explanation_response_b.summary,
-                    details=explanation_response_b.details,
-                ),
+            ),
+            explanation=ExplanationContent(
+                summary=explanation_response.summary,
+                details=details,
             ),
         )
-    
+
     async def run_question_pipeline(
         self,
         request: QuestionPipelineRequest,

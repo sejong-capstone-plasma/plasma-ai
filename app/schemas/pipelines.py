@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -7,12 +7,12 @@ from app.schemas.common import (
     BaselineOutputs,
     CommonBaseModel,
     ConditionResult,
-    CurrentOutputs,
+
     ExplanationContent,
     PredictionResult,
     ProcessParams,
 )
-from app.schemas.extract import ExtractParametersResponse
+from app.schemas.extract import ChatMessage, ExtractParametersResponse
 from app.schemas.optimize import OptimizationResult
 
 
@@ -25,6 +25,7 @@ class PredictionPipelineRequest(CommonBaseModel):
     original_user_input: str = Field(..., description="Original user input text")
     process_type: ProcessType = Field(..., description="Process type")
     process_params: ProcessParams = Field(..., description="Confirmed process parameters")
+    history: List[ChatMessage] = Field(default_factory=list, description="Conversation history")
 
 
 class PredictionPipelineResponse(CommonBaseModel):
@@ -39,7 +40,7 @@ class OptimizationPipelineRequest(CommonBaseModel):
     original_user_input: str = Field(..., description="Original user input text")
     process_type: ProcessType = Field(..., description="Process type")
     process_params: ProcessParams = Field(..., description="Confirmed process parameters")
-    current_outputs: Optional[CurrentOutputs] = Field(default=None, description="Current output values provided by user")
+    history: List[ChatMessage] = Field(default_factory=list, description="Conversation history")
 
 
 class OptimizationPipelineResponse(CommonBaseModel):
@@ -56,6 +57,7 @@ class ComparisonPipelineRequest(CommonBaseModel):
     process_type: ProcessType = Field(..., description="Process type")
     condition_a: ProcessParams = Field(..., description="First condition")
     condition_b: ProcessParams = Field(..., description="Second condition")
+    history: List[ChatMessage] = Field(default_factory=list, description="Conversation history")
 
 
 class ComparisonPipelineResponse(CommonBaseModel):
@@ -63,6 +65,7 @@ class ComparisonPipelineResponse(CommonBaseModel):
     process_type: ProcessType
     condition_a: ConditionResult
     condition_b: ConditionResult
+    explanation: ExplanationContent
 
 
 # Question pipeline schemas are defined in schemas/question.py

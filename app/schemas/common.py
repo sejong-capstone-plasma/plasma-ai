@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, Field, ConfigDict
 
 from app.core.enums import FieldStatus
@@ -53,10 +51,9 @@ class ImprovementEvaluation(CommonBaseModel):
 
 class ExplanationContent(CommonBaseModel):
     summary: str
-    details: List[str]
+    details: dict
 
 
 class ConditionResult(CommonBaseModel):
     process_params: ProcessParams
     prediction_result: PredictionResult
-    explanation: ExplanationContent
