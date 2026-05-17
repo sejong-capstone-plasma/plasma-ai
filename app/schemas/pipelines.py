@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -7,7 +7,7 @@ from app.schemas.common import (
     BaselineOutputs,
     CommonBaseModel,
     ConditionResult,
-    CurrentOutputs,
+
     ExplanationContent,
     PredictionResult,
     ProcessParams,
@@ -40,7 +40,6 @@ class OptimizationPipelineRequest(CommonBaseModel):
     original_user_input: str = Field(..., description="Original user input text")
     process_type: ProcessType = Field(..., description="Process type")
     process_params: ProcessParams = Field(..., description="Confirmed process parameters")
-    current_outputs: Optional[CurrentOutputs] = Field(default=None, description="Current output values provided by user")
     history: List[ChatMessage] = Field(default_factory=list, description="Conversation history")
 
 

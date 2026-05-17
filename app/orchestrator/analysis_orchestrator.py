@@ -88,8 +88,6 @@ class AnalysisOrchestrator:
             "prediction_result": predict_response.prediction_result.model_dump(),
             "interpretation": explanation_response.interpretation,
         }
-        if request.current_outputs is not None:
-            details["current_outputs"] = request.current_outputs.model_dump()
 
         return PredictionPipelineResponse(
             request_id=predict_response.request_id,
@@ -123,7 +121,6 @@ class AnalysisOrchestrator:
                 task_type="OPTIMIZATION",
                 process_type=request.process_type,
                 process_params=request.process_params,
-                current_outputs=request.current_outputs,
                 baseline_outputs=optimization_response.baseline_outputs,
                 optimization_result=optimization_response.optimization_result,
                 history=request.history,
@@ -137,8 +134,6 @@ class AnalysisOrchestrator:
             "optimization_result": optimization_response.optimization_result.model_dump(),
             "interpretation": explanation_response.interpretation,
         }
-        if request.current_outputs is not None:
-            details["current_outputs"] = request.current_outputs.model_dump()
 
         return OptimizationPipelineResponse(
             request_id=request.request_id,

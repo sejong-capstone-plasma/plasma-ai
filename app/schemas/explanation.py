@@ -1,4 +1,4 @@
-from typing import Annotated, List, Literal, Optional, Union
+from typing import Annotated, List, Literal, Union
 
 from pydantic import Field
 
@@ -6,7 +6,7 @@ from app.core.enums import ProcessType
 from app.schemas.common import (
     BaselineOutputs,
     CommonBaseModel,
-    CurrentOutputs,
+
     ProcessParams,
     PredictionResult,
 )
@@ -20,7 +20,6 @@ class PredictionExplanationRequest(CommonBaseModel):
     task_type: Literal["PREDICTION"]
     process_type: ProcessType
     process_params: ProcessParams
-    current_outputs: Optional[CurrentOutputs] = None
     prediction_result: PredictionResult
     history: List[ChatMessage] = Field(default_factory=list)
 
@@ -31,7 +30,6 @@ class OptimizationExplanationRequest(CommonBaseModel):
     task_type: Literal["OPTIMIZATION"]
     process_type: ProcessType
     process_params: ProcessParams
-    current_outputs: Optional[CurrentOutputs] = None
     baseline_outputs: BaselineOutputs
     optimization_result: OptimizationResult
     history: List[ChatMessage] = Field(default_factory=list)
