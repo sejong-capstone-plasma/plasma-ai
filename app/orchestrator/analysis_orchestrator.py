@@ -83,13 +83,21 @@ class AnalysisOrchestrator:
             context=context,
         )
 
+        details: dict = {
+            "process_params": request.process_params.model_dump(),
+            "prediction_result": predict_response.prediction_result.model_dump(),
+            "interpretation": explanation_response.interpretation,
+        }
+        if request.current_outputs is not None:
+            details["current_outputs"] = request.current_outputs.model_dump()
+
         return PredictionPipelineResponse(
             request_id=predict_response.request_id,
             process_type=predict_response.process_type,
             prediction_result=predict_response.prediction_result,
             explanation=ExplanationContent(
                 summary=explanation_response.summary,
-                details=explanation_response.details,
+                details=details,
             ),
         )
 
@@ -123,6 +131,15 @@ class AnalysisOrchestrator:
             context=context,
         )
 
+        details: dict = {
+            "process_params": request.process_params.model_dump(),
+            "baseline_outputs": optimization_response.baseline_outputs.model_dump(),
+            "optimization_result": optimization_response.optimization_result.model_dump(),
+            "interpretation": explanation_response.interpretation,
+        }
+        if request.current_outputs is not None:
+            details["current_outputs"] = request.current_outputs.model_dump()
+
         return OptimizationPipelineResponse(
             request_id=request.request_id,
             process_type=request.process_type,
@@ -130,7 +147,7 @@ class AnalysisOrchestrator:
             optimization_result=optimization_response.optimization_result,
             explanation=ExplanationContent(
                 summary=explanation_response.summary,
-                details=explanation_response.details,
+                details=details,
             ),
         )
 
@@ -158,7 +175,7 @@ class AnalysisOrchestrator:
             self.explanation_service.retrieve_context(request.original_user_input),
         )
 
-        comparison_explanation_response = await self.explanation_service.execute(
+        explanation_response = await self.explanation_service.execute(
             ComparisonExplanationRequest(
                 request_id=request.request_id,
                 original_user_input=request.original_user_input,
@@ -177,6 +194,18 @@ class AnalysisOrchestrator:
             context=context,
         )
 
+        details: dict = {
+            "condition_a": {
+                "process_params": request.condition_a.model_dump(),
+                "prediction_result": predict_response_a.prediction_result.model_dump(),
+            },
+            "condition_b": {
+                "process_params": request.condition_b.model_dump(),
+                "prediction_result": predict_response_b.prediction_result.model_dump(),
+            },
+            "interpretation": explanation_response.interpretation,
+        }
+
         return ComparisonPipelineResponse(
             request_id=request.request_id,
             process_type=request.process_type,
@@ -189,8 +218,8 @@ class AnalysisOrchestrator:
                 prediction_result=predict_response_b.prediction_result,
             ),
             explanation=ExplanationContent(
-                summary=comparison_explanation_response.summary,
-                details=comparison_explanation_response.details,
+                summary=explanation_response.summary,
+                details=details,
             ),
         )
 

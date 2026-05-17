@@ -98,7 +98,7 @@ class ExplanationService:
         try:
             request_id = llm_output["request_id"]
             summary = llm_output["summary"]
-            details = llm_output["details"]
+            interpretation = llm_output["interpretation"]
         except KeyError as e:
             raise ModelInferenceException(
                 message="LLM 설명 응답에 필수 필드가 없습니다.",
@@ -117,18 +117,14 @@ class ExplanationService:
                 details={"summary": summary},
             )
 
-        if (
-            not isinstance(details, list)
-            or not details
-            or not all(isinstance(d, str) for d in details)
-        ):
+        if not isinstance(interpretation, dict) or not interpretation:
             raise ModelInferenceException(
-                message="LLM 설명 응답의 details가 유효하지 않습니다.",
-                details={"details": details},
+                message="LLM 설명 응답의 interpretation이 유효하지 않습니다.",
+                details={"interpretation": interpretation},
             )
 
         return ExplanationResponse(
             request_id=request_id,
             summary=summary,
-            details=details,
+            interpretation=interpretation,
         )

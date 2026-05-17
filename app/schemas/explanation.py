@@ -7,7 +7,6 @@ from app.schemas.common import (
     BaselineOutputs,
     CommonBaseModel,
     CurrentOutputs,
-    ExplanationContent,
     ProcessParams,
     PredictionResult,
 )
@@ -65,8 +64,10 @@ GenerateExplanationRequest = Annotated[
 ExplanationRequest = GenerateExplanationRequest
 
 
-class ExplanationResponse(ExplanationContent):
+class ExplanationResponse(CommonBaseModel):
     request_id: str
+    summary: str
+    interpretation: dict
 
 
 GenerateExplanationResponse = ExplanationResponse
