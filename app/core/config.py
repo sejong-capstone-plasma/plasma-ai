@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     rag_collection_name: str = Field(default="plasma_knowledge", alias="RAG_COLLECTION_NAME")
     rag_chunk_size: int = Field(default=500, alias="RAG_CHUNK_SIZE")
     rag_chunk_overlap: int = Field(default=100, alias="RAG_CHUNK_OVERLAP")
+    rag_embedding_model: str = Field(default="BAAI/bge-m3", alias="RAG_EMBEDDING_MODEL")
 
     llm_provider: Literal["ollama", "vllm"] = Field(default="ollama", alias="LLM_PROVIDER")
     llm_base_url: str = Field(default=DEFAULT_LLM_BASE_URL, alias="LLM_BASE_URL")

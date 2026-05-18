@@ -27,27 +27,13 @@ class QuestionService:
         llm_client: LLMClient | None = None,
         retriever: BaseRetriever | None = None,
         prompt_file: str | None = None,
-        rewrite_prompt_file: str | None = None,
     ) -> None:
         self.llm_client = llm_client or LLMClient()
         self.retriever = retriever or VectorRetriever()
         self.prompt_file = prompt_file or str(_PROMPTS_DIR / "question_system.txt")
-        self._rewrite_prompt = Path(
-            rewrite_prompt_file or str(_PROMPTS_DIR / "query_rewrite_system.txt")
-        ).read_text(encoding="utf-8")
-
-    async def _rewrite_query(self, question: str) -> str:
-        raw = await self.llm_client.chat_with_history(
-            system_prompt=self._rewrite_prompt,
-            history=[],
-            user_prompt=question,
-        )
-        output = self.llm_client.extract_json(raw)
-        return output.get("query", question)
 
     async def execute(self, request: QuestionPipelineRequest) -> QuestionPipelineResponse:
-        search_query = await self._rewrite_query(request.original_user_input)
-        sources = await self.retriever.retrieve(search_query)
+        sources = await self.retriever.retrieve(request.original_user_input)
 
         user_prompt = json.dumps(
             {
