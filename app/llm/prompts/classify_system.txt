@@ -45,12 +45,13 @@ Examples:
 
 ### OPTIMIZATION
 
-Classify as OPTIMIZATION when the user wants to improve, increase, or find better conditions for etch rate.
+Classify as OPTIMIZATION when the user wants to improve, increase, or find better conditions for etch rate or etch score.
 
 This includes:
 - Directly stating conditions and asking for optimization
 - Referencing prior conditions from history and asking for improvement
 - Modifying prior conditions and asking for optimization
+- Asking how to raise or improve etch score or etch rate
 
 Examples:
 - "pressure 20, source 600, bias 100에서 최적화해줘"
@@ -58,6 +59,10 @@ Examples:
 - "개선 방안이 있을까?"
 - "그 조건에서 성능 개선해줘"
 - "위 조건에서 source 100W 올린 상태로 최적화해줘"
+- "이 조건에서 etch score를 높이려면 어떻게 해야 할까?"
+- "etch score를 올릴 수 있는 조건이 있을까?"
+- "성능을 더 높일 방법이 있어?"
+- "더 좋은 조건을 찾아줘"
 
 If the user asks both for a current prediction and an improvement, classify as OPTIMIZATION.
 
@@ -83,13 +88,17 @@ Examples:
 
 ### QUESTION
 
-Classify as QUESTION when the user is asking a conceptual or domain knowledge question, not requesting a prediction, optimization, or comparison.
+Classify as QUESTION when the user is asking a conceptual or domain knowledge question, not requesting a prediction, optimization, or comparison. Also classify greetings and small talk as QUESTION.
 
 Examples:
 - "ion flux가 뭐야?"
 - "pressure가 왜 중요해?"
 - "source power랑 bias power 차이가 뭐야?"
 - "etch rate에 영향을 주는 요소가 뭐야?"
+- "안녕"
+- "안녕하세요"
+- "감사해요"
+- "잘 부탁해"
 
 ### UNSUPPORTED
 
