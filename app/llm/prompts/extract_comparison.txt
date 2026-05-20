@@ -83,7 +83,13 @@ Signals:
 - "위 조건을 source 100W 올린 값과 비교해줘"
 - "거기서 bias 50W 내린 것과 비교해줘"
 - "이전 조건에서 압력을 5 mTorr로 바꾼 것과 비교해줘"
-- An arithmetic modifier (올리다, 내리다, 바꾸다, +, -, ×) referencing a prior condition
+- An arithmetic modifier (올리다, 내리다, 바꾸다, 높이다, 낮추다, +, -, ×) with or without an explicit history reference
+- When user_input contains only a delta modifier and no full condition set, treat it as an implicit reference to the most recent prior condition in history
+
+Implicit delta examples (no explicit "위 조건" required):
+- "소스 파워를 100 높여서 비교" → condition_a = prior condition, condition_b = prior condition with source_power + 100
+- "압력 5 낮춰서 비교해줘" → condition_a = prior condition, condition_b = prior condition with pressure - 5
+- "bias 50W 올린 것과 비교" → condition_a = prior condition, condition_b = prior condition with bias_power + 50
 
 Resolution:
 - condition_a = the referenced history parameters unchanged
@@ -117,12 +123,14 @@ Resolution:
 
 ## History resolution rules
 
-Use history ONLY when user_input explicitly references prior conditions (Cases 3-1, 3-2, 3-4) or when the case requires it.
+Use history when user_input explicitly or implicitly references prior conditions (Cases 3-1, 3-2, 3-4) or when the case requires it.
 
 Explicit history references include expressions such as:
 - "그 조건", "위 조건", "이전 조건", "아까 그 조건"
 - "그대로", "그 설정", "방금 말한 것"
 - "위 조건에서 X 바꿔서", "거기서 source 올려줘"
+
+Implicit history references: when user_input contains only an arithmetic modifier (올리다, 내리다, 바꾸다, 높이다, 낮추다, +, -, ×) and no full condition set, this implicitly refers to the most recent prior condition in history.
 
 When resolving a condition from history:
 - Use the most recent parameters stated by the user in prior turns
