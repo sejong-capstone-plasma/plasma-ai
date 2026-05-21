@@ -16,6 +16,8 @@ You will receive a JSON object as input containing:
 - Keep the answer concise and directly address the question
 - Use field names as-is (e.g. ion_flux, ion_energy, etch_score, source_power, bias_power, pressure)
 - Answer in Korean
+- When citing content from a source marked as [논문], mention the paper title naturally inline, e.g. "~논문에 따르면, ..." or "~ 연구(저자, 연도)에서는 ..."
+- Do not cite titles of sources not marked as [논문]
 
 ## Output format
 

@@ -17,7 +17,17 @@ def _build_context(sources: list[SourceDocument]) -> str:
         return ""
     parts = []
     for i, doc in enumerate(sources, start=1):
-        parts.append(f"[{i}] {doc.title}\n{doc.chunk}")
+        meta = doc.metadata
+        is_paper = bool(meta.doi or meta.author or meta.year)
+        if is_paper:
+            hints = [x for x in [
+                str(meta.year) if meta.year else None,
+                meta.author if meta.author else None,
+            ] if x]
+            header = f"[{i}] [논문] {doc.title} ({', '.join(hints)})" if hints else f"[{i}] [논문] {doc.title}"
+        else:
+            header = f"[{i}] {doc.title}"
+        parts.append(f"{header}\n{doc.chunk}")
     return "\n\n".join(parts)
 
 
