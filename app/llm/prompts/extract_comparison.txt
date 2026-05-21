@@ -118,7 +118,10 @@ Resolution:
 - If history contains 2 or more distinct conditions:
   - condition_a = the earlier of the two distinct conditions
   - condition_b = the more recent of the two distinct conditions
-- If history contains only 1 distinct condition or none:
+- If history contains exactly 1 distinct condition:
+  - condition_a = that condition
+  - condition_b = set all fields to MISSING (user must provide the second condition)
+- If history contains no conditions:
   - Set all fields of BOTH condition_a and condition_b to MISSING
 
 ## History resolution rules
@@ -419,9 +422,9 @@ Output:
 {
   "request_id": "req-005",
   "condition_a": {
-    "pressure":     {"value": null, "unit": null, "status_hint": "MISSING"},
-    "source_power": {"value": null, "unit": null, "status_hint": "MISSING"},
-    "bias_power":   {"value": null, "unit": null, "status_hint": "MISSING"}
+    "pressure":     {"value": 20,  "unit": "mTorr", "status_hint": "VALID"},
+    "source_power": {"value": 600, "unit": "W",     "status_hint": "VALID"},
+    "bias_power":   {"value": 100, "unit": "W",     "status_hint": "VALID"}
   },
   "condition_b": {
     "pressure":     {"value": null, "unit": null, "status_hint": "MISSING"},
