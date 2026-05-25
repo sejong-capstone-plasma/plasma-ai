@@ -133,13 +133,23 @@ Explicit history references include expressions such as:
 - "그대로", "그 설정", "방금 말한 것"
 - "위 조건에서 X 바꿔서", "거기서 source 올려줘"
 - "개선된 조건", "최적화된 조건", "추천된 조건", "1순위 조건", "원래 조건"
+- "조건 A", "조건 B", "조건 1", "조건 2", "이긴 조건", "진 조건"
 
-When user_input references the optimized/improved condition from a prior optimization result:
-- Look specifically inside optimization_result.optimization_candidates where rank=1, and extract that entry's process_params
-- Do NOT use the top-level process_params from the same history entry (that is the original input condition, not the improved one)
+When user_input references a specific optimized candidate from a prior optimization result:
+- History contains simplified lines like "개선 조건 1순위: pressure X mTorr, source_power Y W, bias_power Z W"
+- "개선된 조건", "1순위 조건", "추천된 조건" → use params from the "개선 조건 1순위" line
+- "2순위 조건", "두 번째 조건" → use params from the "개선 조건 2순위" line
+- "3순위 조건", "세 번째 조건" → use params from the "개선 조건 3순위" line
 
 When user_input references "원래 조건" after an optimization:
-- Use the top-level process_params from the most recent optimization history entry (that is the original input condition)
+- Use params from the "원래 조건" line in history
+
+When user_input references a condition from a prior comparison result:
+- History contains lines like "조건 A (조건 1): pressure X mTorr, ..., etch_score S ← 이긴 조건"
+- "조건 A" or "조건 1" → use params from the "조건 A (조건 1)" line
+- "조건 B" or "조건 2" → use params from the "조건 B (조건 2)" line
+- "이긴 조건", "더 나은 조건", "점수 높은 조건" → use params from the line marked "← 이긴 조건"
+- "진 조건", "점수 낮은 조건" → use params from the line NOT marked "← 이긴 조건"
 
 Implicit history references: when user_input contains only an arithmetic modifier (올리다, 내리다, 바꾸다, 높이다, 낮추다, +, -, ×) and no full condition set, this implicitly refers to the most recent prior condition in history.
 
