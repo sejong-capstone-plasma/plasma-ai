@@ -64,8 +64,9 @@ Explicit history references include expressions such as:
 - "개선안으로", "추천 조건으로"
 
 When user_input references the optimized/improved condition from a prior optimization result:
-- Look for the rank-1 candidate's process_params in the most recent optimization result in history
-- Use those params as the base condition
+- Look specifically inside optimization_result.optimization_candidates where rank=1, and extract that entry's process_params
+- Do NOT use the top-level process_params from the same history entry (that is the original input condition, not the improved one)
+- Use the rank-1 candidate's process_params as the base condition
 
 Implicit history references: when user_input contains only an arithmetic modifier (올리다, 내리다, 바꾸다, 높이다, 낮추다, +, -) applied to a single field with no full condition set stated, treat it as an implicit reference to the most recent prior condition in history.
 
