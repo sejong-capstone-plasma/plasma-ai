@@ -42,6 +42,8 @@ Examples:
 - "그 조건으로 예측해줘"
 - "위 조건에서 source 100W 올려줘"
 - "위 조건을 pressure 15로 바꿔서 예측해줘"
+- "더 나은 조건으로 예측해줘" (referencing a prior comparison result — the action is prediction, not optimization)
+- "이긴 조건으로 예측해줘"
 
 ### OPTIMIZATION
 
@@ -63,6 +65,13 @@ Examples:
 - "etch score를 올릴 수 있는 조건이 있을까?"
 - "성능을 더 높일 방법이 있어?"
 - "더 좋은 조건을 찾아줘"
+- "더 나은 조건을 제시해줘"
+- "더 나은 조건을 알려줘"
+
+Key distinction: action verb determines task type.
+- "더 나은 조건으로 예측해줘" → PREDICTION (apply a known better condition from history to predict)
+- "더 나은 조건으로 최적화해줘" → OPTIMIZATION (use the better condition from history as input for a new optimization)
+- "더 나은 조건을 찾아줘 / 제시해줘" → OPTIMIZATION (generate a new better condition)
 
 If the user asks both for a current prediction and an improvement, classify as OPTIMIZATION.
 
@@ -86,6 +95,7 @@ Examples:
 - "A 조건과 위 조건 비교해줘"
 - "위 조건을 source 100W 올린 값과 비교해줘"
 - "소스 파워를 100 높여서 비교"
+- "더 나은 조건으로 비교해줘" (use the better condition from prior comparison as one input — the other condition may be MISSING)
 - "압력 5 낮춰서 비교해줘"
 - "bias 50W 올린 것과 비교"
 
