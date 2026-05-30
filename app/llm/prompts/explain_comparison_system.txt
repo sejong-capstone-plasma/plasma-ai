@@ -53,13 +53,18 @@ Return exactly one JSON object:
 
 ## Summary generation rules
 
-Write 2–3 Korean sentences as a self-contained chatbot response. Cover in order:
+Write 2–3 Korean sentences as a self-contained chatbot response, followed by a structured condition parameter list. Cover in order:
 
 1. Which condition has the higher etch_score, by how much, and both values
    If both etch_scores are equal, state that instead and move to plasma characteristics
 2. The most notable plasma characteristic difference (ion_flux or ion_energy — whichever shows the larger relative gap)
    If context explains the practical significance of this difference (e.g., implications for etch rate or selectivity), incorporate inline with "일반적으로" or "해당 공정 범위에서"
 3. If message history shows the winning condition has changed across prior requests: note that
+4. After the sentences, append both conditions as structured lines:
+   Format: "조건 A (조건 1): pressure {value} {unit}, source_power {value} {unit}, bias_power {value} {unit}, etch_score {value} point"
+            "조건 B (조건 2): pressure {value} {unit}, source_power {value} {unit}, bias_power {value} {unit}, etch_score {value} point"
+   Append " ← 이긴 조건" to the winning condition's line (skip if equal).
+   These lines are required and must appear even if no context or history enrichment applies.
 
 All values must include units taken directly from the input. Use "조건 A" and "조건 B" to refer to condition_a and condition_b.
 
@@ -108,7 +113,7 @@ If no prior comparison results exist in history, omit item 3 from the summary.
 - Return JSON only
 - No markdown, no code fences, no prose outside the JSON
 - request_id must be copied exactly from input
-- summary must be a single string of 2–3 Korean sentences
+- summary must be a single string of 2–3 Korean sentences followed by "조건 A (조건 1): ..." and "조건 B (조건 2): ..." lines with params
 - interpretation must contain exactly winning_condition, score_gap_size, higher_ion_flux, higher_ion_energy with valid labels
 - Never add extra keys
 
@@ -149,7 +154,7 @@ If no prior comparison results exist in history, omit item 3 from the summary.
 
 {
   "request_id": "req-003",
-  "summary": "조건 B의 etch_score가 87 point로 조건 A의 80 point보다 7 point 높습니다. ion_flux 역시 조건 B(8.12e+15 cm^-2 s^-1)가 조건 A(7.42e+15 cm^-2 s^-1)보다 높으며, 일반적으로 높은 ion_flux는 플라즈마 밀도 증가와 식각 속도 향상에 유리한 조건입니다.",
+  "summary": "조건 B의 etch_score가 87 point로 조건 A의 80 point보다 7 point 높습니다. ion_flux 역시 조건 B(8.12e+15 cm^-2 s^-1)가 조건 A(7.42e+15 cm^-2 s^-1)보다 높으며, 일반적으로 높은 ion_flux는 플라즈마 밀도 증가와 식각 속도 향상에 유리한 조건입니다.\n조건 A (조건 1): pressure 5 mTorr, source_power 300 W, bias_power 80 W, etch_score 80 point\n조건 B (조건 2): pressure 4 mTorr, source_power 400 W, bias_power 60 W, etch_score 87 point ← 이긴 조건",
   "interpretation": {
     "winning_condition": "condition_b",
     "score_gap_size": "moderate",

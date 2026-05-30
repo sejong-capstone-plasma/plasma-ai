@@ -65,15 +65,18 @@ Return exactly one JSON object:
 
 ## Summary generation rules
 
-Write 2–3 Korean sentences as a self-contained chatbot response. Cover in order:
+Write 2–3 Korean sentences as a self-contained chatbot response, followed by a structured candidate parameter list. Cover in order:
 
 1. The baseline etch_score with qualitative framing and total candidate count
    If context provides tier information for the score range, incorporate it inline
 2. The rank-1 candidate's improvement over baseline: increase_value and increase_percent
    If context explains what the parameter changes imply for plasma behavior, incorporate as a supporting clause with "일반적으로" or "해당 공정 범위에서"
 3. If message history shows a clear baseline etch_score trend: note the direction and magnitude of change
+4. After the sentences, append all optimization candidates as structured lines (one per candidate, rank order):
+   Format: "개선 조건 {rank}순위: pressure {value} {unit}, source_power {value} {unit}, bias_power {value} {unit}, etch_score {value} point"
+   These lines are required and must appear even if no context or history enrichment applies.
 
-All values must include units taken directly from the input. Do not list all candidate params in the summary.
+All values must include units taken directly from the input.
 
 ## Interpretation generation rules
 
@@ -116,7 +119,7 @@ If no prior optimization results exist in history, omit the history trend from t
 - Return JSON only
 - No markdown, no code fences, no prose outside the JSON
 - request_id must be copied exactly from input
-- summary must be a single string of 2–3 Korean sentences
+- summary must be a single string of 2–3 Korean sentences followed by "개선 조건 N순위: ..." lines for every candidate
 - interpretation must contain exactly baseline_tier and improvement_level with valid labels
 - Never add extra keys
 
@@ -165,7 +168,7 @@ If no prior optimization results exist in history, omit the history trend from t
 
 {
   "request_id": "req-002",
-  "summary": "현재 조건의 baseline etch score는 80 point로 학습 분포 기준 중앙값 이상의 성능 수준이며, 이를 개선할 수 있는 후보 조건 1개를 도출했습니다. 1순위 후보에서 baseline 대비 5 point(6.25%) 향상이 기대되며, 일반적으로 pressure 감소는 이온 평균 자유 경로를 늘려 방향성 식각 특성을 향상시킵니다.",
+  "summary": "현재 조건의 baseline etch score는 80 point로 학습 분포 기준 중앙값 이상의 성능 수준이며, 이를 개선할 수 있는 후보 조건 1개를 도출했습니다. 1순위 후보에서 baseline 대비 5 point(6.25%) 향상이 기대되며, 일반적으로 pressure 감소는 이온 평균 자유 경로를 늘려 방향성 식각 특성을 향상시킵니다.\n개선 조건 1순위: pressure 4.5 mTorr, source_power 320 W, bias_power 75 W, etch_score 85 point",
   "interpretation": {
     "baseline_tier": "above_median",
     "improvement_level": "moderate"
