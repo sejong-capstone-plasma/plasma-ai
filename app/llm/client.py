@@ -61,6 +61,7 @@ class LLMClient:
         system_prompt: str,
         history: list[dict[str, str]],
         user_prompt: str,
+        max_tokens: int | None = None,
     ) -> str:
         extra: dict = {}
         if settings.llm_provider == "vllm":
@@ -75,7 +76,7 @@ class LLMClient:
             response = await self.client.chat.completions.create(
                 model=self.model,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens,
+                max_tokens=max_tokens or self.max_tokens,
                 messages=messages,
                 **extra,
             )
@@ -105,6 +106,7 @@ class LLMClient:
         prompt_file: str,
         history: list[dict[str, str]],
         user_prompt: str,
+        max_tokens: int | None = None,
     ) -> str:
         try:
             prompt_path = Path(prompt_file).resolve()
@@ -124,6 +126,7 @@ class LLMClient:
             system_prompt=system_prompt,
             history=history,
             user_prompt=user_prompt,
+            max_tokens=max_tokens,
         )
 
     async def chat_from_file(self, prompt_file: str, user_prompt: str) -> str:

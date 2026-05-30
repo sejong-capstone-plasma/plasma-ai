@@ -50,6 +50,8 @@ class ExtractService:
             TaskType.UNSUPPORTED: UnsupportedHandler(**handler_kwargs),
         }
 
+    _PARAM_LINE_PREFIXES = ("예측 조건:", "원래 조건:", "개선 조건", "조건 A", "조건 B")
+
     @staticmethod
     def _format_params(params: dict) -> str:
         order = ["pressure", "source_power", "bias_power"]
@@ -61,10 +63,21 @@ class ExtractService:
         return ", ".join(parts)
 
     @staticmethod
-    def _simplify_assistant_message(content: str) -> str:
+    def _extract_param_lines(content: str) -> str:
+        lines = [
+            line for line in content.splitlines()
+            if line.startswith(ExtractService._PARAM_LINE_PREFIXES)
+        ]
+        return "\n".join(lines)
+
+    @staticmethod
+    def _simplify_assistant_message(content: str, full: bool = True) -> str:
         try:
             data = json.loads(content)
         except (json.JSONDecodeError, TypeError):
+            if not full:
+                param_lines = ExtractService._extract_param_lines(content)
+                return param_lines if param_lines else content
             return content
 
         details = data.get("details", {})
@@ -72,9 +85,10 @@ class ExtractService:
             return data.get("summary", content)
 
         lines = []
-        summary = data.get("summary", "")
-        if summary:
-            lines.append(summary)
+        if full:
+            summary = data.get("summary", "")
+            if summary:
+                lines.append(summary)
 
         # prediction
         if "prediction_result" in details and "process_params" in details:
@@ -99,7 +113,6 @@ class ExtractService:
         if "condition_a" in details and "condition_b" in details:
             interpretation = details.get("interpretation", {})
             winner = interpretation.get("winning_condition")
-            label_map = {"condition_a": "조건 A (조건 1)", "condition_b": "조건 B (조건 2)"}
             for key, label in [("condition_a", "조건 A (조건 1)"), ("condition_b", "조건 B (조건 2)")]:
                 cond = details[key]
                 params = ExtractService._format_params(cond.get("process_params", {}))
@@ -109,11 +122,15 @@ class ExtractService:
 
         return "\n".join(lines) if lines else content
 
-    def _simplify_history(self, history: list[dict]) -> list[dict]:
+    def _simplify_history(self, history: list[dict], recent_exchanges: int = 2) -> list[dict]:
+        # Messages within the last recent_exchanges turns get full format (summary + params).
+        # Older messages get params-only to reduce token count.
+        cutoff = max(0, len(history) - recent_exchanges * 2)
         result = []
-        for msg in history:
+        for i, msg in enumerate(history):
             if msg["role"] == "assistant":
-                result.append({"role": "assistant", "content": self._simplify_assistant_message(msg["content"])})
+                full = i >= cutoff
+                result.append({"role": "assistant", "content": self._simplify_assistant_message(msg["content"], full=full)})
             else:
                 result.append(msg)
         return result
@@ -136,6 +153,7 @@ class ExtractService:
             prompt_file=self._classify_prompt_file,
             history=history,
             user_prompt=classify_user_prompt,
+            max_tokens=256,
         )
         classify_output = self._llm_client.extract_json(classify_raw)
         classify_parsed = self._llm_classification_parser.parse(classify_output)
