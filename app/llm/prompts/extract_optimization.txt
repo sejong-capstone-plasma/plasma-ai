@@ -83,6 +83,7 @@ Examples:
 - "개선된 조건으로 한번 더 최적화해줘" → use rank-1 candidate's process_params from the most recent optimization result in history
 - "추천된 조건에서 최적화해줘" → same as above
 - "이긴 조건에서 최적화해줘" → use params from the line marked "← 이긴 조건" in the most recent comparison result in history
+- "진 조건으로 최적화해줘", "성능이 낮은 조건", "점수 낮은 조건", "더 낮은 조건" → use params from the line NOT marked "← 이긴 조건" in the most recent comparison result in history
 - "조건 A로 최적화해줘" or "조건 1로 최적화해줘" → use params from the "조건 A (조건 1)" line in history
 - "위 조건에서 source 100W 올린 상태로 최적화해줘" → use prior params, add 100 to source_power value
 - "압력을 15 mTorr로 바꿔서 최적화해줘" → use prior params, replace pressure with 15 mTorr
