@@ -50,12 +50,99 @@ class ExtractService:
             TaskType.UNSUPPORTED: UnsupportedHandler(**handler_kwargs),
         }
 
+    _PARAM_LINE_PREFIXES = ("예측 조건:", "원래 조건:", "개선 조건", "조건 A", "조건 B")
+
+    @staticmethod
+    def _format_params(params: dict) -> str:
+        order = ["pressure", "source_power", "bias_power"]
+        parts = []
+        for key in order:
+            if key in params:
+                v = params[key]
+                parts.append(f"{key} {v.get('value')} {v.get('unit', '')}")
+        return ", ".join(parts)
+
+    @staticmethod
+    def _extract_param_lines(content: str) -> str:
+        lines = [
+            line for line in content.splitlines()
+            if line.startswith(ExtractService._PARAM_LINE_PREFIXES)
+        ]
+        return "\n".join(lines)
+
+    @staticmethod
+    def _simplify_assistant_message(content: str, full: bool = True) -> str:
+        try:
+            data = json.loads(content)
+        except (json.JSONDecodeError, TypeError):
+            if not full:
+                param_lines = ExtractService._extract_param_lines(content)
+                return param_lines if param_lines else content
+            return content
+
+        details = data.get("details", {})
+        if not details:
+            return data.get("summary", content)
+
+        lines = []
+        if full:
+            summary = data.get("summary", "")
+            if summary:
+                lines.append(summary)
+
+        # prediction
+        if "prediction_result" in details and "process_params" in details:
+            params = ExtractService._format_params(details["process_params"])
+            pr = details["prediction_result"]
+            score = pr.get("etch_score", {}).get("value", "?")
+            lines.append(f"예측 조건: {params} → etch_score {score}")
+
+        # optimization
+        if "optimization_result" in details and "process_params" in details:
+            orig = ExtractService._format_params(details["process_params"])
+            orig_score = details.get("baseline_outputs", {}).get("etch_score", {}).get("value", "?")
+            lines.append(f"원래 조건: {orig}, etch_score {orig_score}")
+            candidates = details["optimization_result"].get("optimization_candidates", [])
+            for c in candidates:
+                rank = c.get("rank")
+                params = ExtractService._format_params(c.get("process_params", {}))
+                score = c.get("prediction_result", {}).get("etch_score", {}).get("value", "?")
+                lines.append(f"개선 조건 {rank}순위: {params}, etch_score {score}")
+
+        # comparison
+        if "condition_a" in details and "condition_b" in details:
+            interpretation = details.get("interpretation", {})
+            winner = interpretation.get("winning_condition")
+            for key, label in [("condition_a", "조건 A (조건 1)"), ("condition_b", "조건 B (조건 2)")]:
+                cond = details[key]
+                params = ExtractService._format_params(cond.get("process_params", {}))
+                score = cond.get("prediction_result", {}).get("etch_score", {}).get("value", "?")
+                win_marker = " ← 이긴 조건" if winner == key else ""
+                lines.append(f"{label}: {params}, etch_score {score}{win_marker}")
+
+        return "\n".join(lines) if lines else content
+
+    def _simplify_history(self, history: list[dict], recent_exchanges: int = 2) -> list[dict]:
+        # Messages within the last recent_exchanges turns get full format (summary + params).
+        # Older messages get params-only to reduce token count.
+        cutoff = max(0, len(history) - recent_exchanges * 2)
+        result = []
+        for i, msg in enumerate(history):
+            if msg["role"] == "assistant":
+                full = i >= cutoff
+                result.append({"role": "assistant", "content": self._simplify_assistant_message(msg["content"], full=full)})
+            else:
+                result.append(msg)
+        return result
+
     async def execute(
         self,
         request: ExtractParametersRequest,
     ) -> ExtractParametersResponse:
         cleaned_input = self._input_preprocessor.clean(request.user_input)
-        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+        history = self._simplify_history(
+            [{"role": msg.role, "content": msg.content} for msg in request.history]
+        )
 
         # Step 1: Classify task_type + process_type (with history context)
         classify_user_prompt = json.dumps(
@@ -66,6 +153,7 @@ class ExtractService:
             prompt_file=self._classify_prompt_file,
             history=history,
             user_prompt=classify_user_prompt,
+            max_tokens=256,
         )
         classify_output = self._llm_client.extract_json(classify_raw)
         classify_parsed = self._llm_classification_parser.parse(classify_output)

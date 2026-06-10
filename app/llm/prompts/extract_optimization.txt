@@ -54,12 +54,24 @@ Rules:
 
 ## History resolution rules
 
-Use history ONLY when user_input contains an explicit reference to prior conditions.
+Use history when user_input explicitly or implicitly references prior conditions.
 
 Explicit history references include expressions such as:
 - "그 조건", "위 조건", "이전 조건", "아까 그 조건"
 - "그대로", "그 설정", "방금 말한 것"
 - "위 조건에서 X 바꿔서", "거기서 source 올려줘"
+- "개선된 조건", "최적화된 조건", "추천된 조건", "1순위 조건"
+- "개선안으로", "추천 조건으로", "그 개선안에서"
+- "조건 A", "조건 B", "조건 1", "조건 2", "이긴 조건", "진 조건"
+
+When user_input references a specific optimized candidate from a prior optimization result:
+- History contains simplified lines like "개선 조건 1순위: pressure X mTorr, source_power Y W, bias_power Z W"
+- "개선된 조건", "1순위 조건", "추천된 조건" → use params from the "개선 조건 1순위" line
+- "2순위 조건", "두 번째 조건" → use params from the "개선 조건 2순위" line
+- "3순위 조건", "세 번째 조건" → use params from the "개선 조건 3순위" line
+- Do NOT use the "원래 조건" line (that is the original input condition, not the improved one)
+
+Implicit history references: when user_input contains only an arithmetic modifier (올리다, 내리다, 바꾸다, 높이다, 낮추다, +, -) applied to a single field with no full condition set stated, treat it as an implicit reference to the most recent prior condition in history.
 
 When user_input contains one of these references:
 - Resolve the referenced conditions from the most recent prior params in history
@@ -68,8 +80,15 @@ When user_input contains one of these references:
 Examples:
 - "그 조건에서 최적화해줘" → use all params from the most recent prior conditions in history
 - "위 조건에서 성능 개선해줘" → same as above
+- "개선된 조건으로 한번 더 최적화해줘" → use rank-1 candidate's process_params from the most recent optimization result in history
+- "추천된 조건에서 최적화해줘" → same as above
+- "이긴 조건에서 최적화해줘", "더 나은 조건으로 최적화해줘", "더 좋은 조건으로 최적화해줘" → use params from the line marked "← 이긴 조건" in the most recent comparison result in history
+- "진 조건으로 최적화해줘", "성능이 낮은 조건", "점수 낮은 조건", "더 낮은 조건" → use params from the line NOT marked "← 이긴 조건" in the most recent comparison result in history
+- "조건 A로 최적화해줘" or "조건 1로 최적화해줘" → use params from the "조건 A (조건 1)" line in history
 - "위 조건에서 source 100W 올린 상태로 최적화해줘" → use prior params, add 100 to source_power value
 - "압력을 15 mTorr로 바꿔서 최적화해줘" → use prior params, replace pressure with 15 mTorr
+- "소스 파워를 100 높여서 최적화해줘" → implicit delta: use prior params, add 100 to source_power value
+- "bias 50W 낮춰서 개선해줘" → implicit delta: use prior params, subtract 50 from bias_power value
 
 When applying a change to a prior value:
 - Extract the prior value from history
@@ -77,7 +96,7 @@ When applying a change to a prior value:
 - Set status_hint to VALID if the resulting value and unit are both present and unambiguous
 - Set status_hint to AMBIGUOUS if the result is unclear
 
-When user_input does NOT reference prior conditions:
+When user_input does NOT reference prior conditions and does NOT contain a delta modifier:
 - Extract only from user_input
 - Treat every unmentioned field as MISSING regardless of what is in history
 - Do NOT carry over any values from history
@@ -592,6 +611,39 @@ Output:
     },
     "source_power": {
       "value": 600,
+      "unit": "W",
+      "status_hint": "VALID"
+    },
+    "bias_power": {
+      "value": 100,
+      "unit": "W",
+      "status_hint": "VALID"
+    }
+  },
+  "current_outputs": null
+}
+
+### Few-shot example 6b: implicit delta — no explicit history reference
+
+History: user said "pressure 20 mTorr, source 600 W, bias 100 W"
+
+Input:
+{
+  "request_id": "req-fs-006b",
+  "user_input": "소스 파워를 100 높여서 최적화해줘"
+}
+
+Output:
+{
+  "request_id": "req-fs-006b",
+  "process_params": {
+    "pressure": {
+      "value": 20,
+      "unit": "mTorr",
+      "status_hint": "VALID"
+    },
+    "source_power": {
+      "value": 700,
       "unit": "W",
       "status_hint": "VALID"
     },

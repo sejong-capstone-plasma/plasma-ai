@@ -14,6 +14,13 @@ from app.rag.embedding import get_embedding_function
 
 logger = logging.getLogger(__name__)
 
+_PAPERS_METADATA_PATH = Path(__file__).resolve().parents[2] / "data" / "knowledge" / "papers_metadata.json"
+
+def _load_papers_metadata() -> dict:
+    if _PAPERS_METADATA_PATH.exists():
+        return json.loads(_PAPERS_METADATA_PATH.read_text(encoding="utf-8"))
+    return {}
+
 
 class IndexBuilder:
     def __init__(
@@ -33,6 +40,7 @@ class IndexBuilder:
 
     def build(self) -> None:
         self.index_dir.mkdir(parents=True, exist_ok=True)
+        self._papers_metadata = _load_papers_metadata()
 
         logger.info("Loading embedding model...")
         sys.stdout.flush()
@@ -114,20 +122,23 @@ class IndexBuilder:
 
     def _load_pdf(self, path: Path) -> tuple[str, dict]:
         data = self._extract_pdf(path)
+        known = getattr(self, "_papers_metadata", {}).get(path.name, {})
+
         if data is None:
-            return "", {"source": str(path), "title": path.stem, "type": "pdf"}
+            return "", {"source": str(path), "title": known.get("title") or path.stem, "type": "pdf"}
 
         logger.info("  %s: %d pages (read up to %d)", path.name, data["num_pages"], self._MAX_PDF_PAGES)
         text = "\n\n".join(p for p in data["pages"] if p.strip())
 
         metadata: dict = {
             "source": str(path),
-            "title": data.get("title") or path.stem,
+            "title": known.get("title") or data.get("title") or path.stem,
             "type": "pdf",
         }
         for key in ("author", "year", "doi"):
-            if data.get(key):
-                metadata[key] = data[key]
+            metadata[key] = known.get(key) or data.get(key)
+            if metadata[key] is None:
+                del metadata[key]
 
         return text, metadata
 

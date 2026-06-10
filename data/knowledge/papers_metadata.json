@@ -1,0 +1,37 @@
+{
+  "Ko_2023_J._Phys._D__Appl._Phys._56_344001.pdf": {
+    "title": "Computational approach for plasma process optimization combined with deep learning model",
+    "author": "Jungmin Ko, Jinkyu Bae, Minho Park, Younghyun Jo, Hyunjae Lee, Kyunghyun Kim, Suyoung Yoo, Sang Ki Nam, Dougyong Sung, Byungjo Kim",
+    "year": 2023
+  },
+  "103305_1_online.pdf": {
+    "title": "Effect of simultaneous source and bias pulsing in inductively coupled plasma etching",
+    "author": "Ankur Agarwal, Phillip J. Stout, Samer Banna, Shahid Rauf, Ken Tokashiki, Jeong-Yun Lee, Ken Collins",
+    "year": 2009
+  },
+  "Etch_rate_prediction_in_plasma_etching_using_feed_forward_Error-Back_Propagation_neural_network_model.pdf": {
+    "title": "Etch rate prediction in plasma etching using feed forward Error-Back Propagation neural network model",
+    "author": "Ha-Deok Song, Ho-Taek Noh, Dong-Ii Kim, Seung-Soo Han",
+    "year": 2015
+  },
+  "Extreme_learning_machines_for_virtual_metrology_and_etch_rate_prediction.pdf": {
+    "title": "Extreme learning machines for virtual metrology and etch rate prediction",
+    "author": "Luca Puggini, Sean McLoone",
+    "year": 2015
+  },
+  "Lallement_2009_Plasma_Sources_Sci._Technol._18_025001.pdf": {
+    "title": "Global model and diagnostic of a low-pressure SF6/Ar inductively coupled plasma",
+    "author": "L Lallement, A Rhallabi, C Cardinaud, M C Peignon-Fernandez, L L Alves",
+    "year": 2009
+  },
+  "T_Chevolleau_2000_Plasma_Sources_Sci._Technol._9_568.pdf": {
+    "title": "Ion flux, ion energy distribution and neutral density in an inductively coupled argon discharge",
+    "author": "T Chevolleau, W Fukarek",
+    "year": 2000
+  },
+  "V_A_Godyak_2002_Plasma_Sources_Sci._Technol._11_525.pdf": {
+    "title": "Electron energy distribution function measurements and plasma parameters in inductively coupled argon plasma",
+    "author": "V A Godyak, R B Piejak, B M Alexandrovich",
+    "year": 2002
+  }
+}

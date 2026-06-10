@@ -42,6 +42,7 @@ class ComparisonHandler(BaseTaskHandler):
             prompt_file=_PROMPT_FILE,
             history=history,
             user_prompt=extract_user_prompt,
+            max_tokens=512,
         )
         extract_output = self.llm_client.extract_json(extract_raw)
         parsed = self.llm_extraction_parser.parse_comparison(extract_output)
